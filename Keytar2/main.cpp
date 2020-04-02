@@ -29,6 +29,10 @@
 #include <stdio.h>
 #include "main.h"
 
+// Audio uses a lot of interrupts pretty heavily so if I want
+// to debug something else, it is handy to turn it off temporarily.
+#define ENABLE_AUDIO
+
 //WAV wavTest;
 
 void fnPlayWav()
@@ -63,15 +67,16 @@ int main()
     }
 */
 
+#ifdef ENABLE_AUDIO
     // Init audio.
     printf("Init audio...");
     fflush(stdout);
-    Audio audio;
-    if(Audio::kStatusOk == audio.init()) {
+    if(Audio::kStatusOk == Audio::instance()->init()) {
     	printf("OK\n");
     } else {
     	printf("Fail\n");
     }
+#endif // ENABLE_AUDIO
 
     // Set up on-screen controls.
     Gui::Button btnWav(Gui::Rect(10, 10, 146, 30), "PLAY WAV", &fnPlayWav);
@@ -109,23 +114,26 @@ int main()
     }
 #endif // 0
 
-/*
+
     printf("Start audio streaming...");
     fflush(stdout);
-    if(Audio::kStatusOk == audio.start()) {
+    if(Audio::kStatusOk == Audio::instance()->start()) {
     	printf("OK\n");
     } else {
     	printf("Fail\n");
     }
-*/
+
     // Main loop
     while(1)
     {
     	gui->tick();
 
-    	// Process audio.
- //   	audio.process();
+//#ifdef ENABLE_AUDIO
+//    	// Process audio.
+//    	audio.process();
+//#endif // ENABLE_AUDIO
 
+    	/*
     	SAMPLE *audioData;
     	unsigned nSamples = audio.getData(&audioData);
 		int max = 0;
@@ -136,5 +144,6 @@ int main()
 		}
 
 		meterAudio.setValue(max >> 8);
+*/
     }
 }

@@ -19,31 +19,27 @@ enum {
 	kSampleChannels = 2
 };
 
-//#define SDRAM_WRITE_READ_ADDR        ((uint32_t)(CAMERA_FRAME_BUFFER + (CAMERA_RES_MAX_X * CAMERA_RES_MAX_Y * RGB565_BYTE_PER_PIXEL)))
-//#define AUDIO_REC_START_ADDR         SDRAM_WRITE_READ_ADDR
-
+// DMA buffers to send and receive audio.
+// TODO: Might be faster if I put it in DTCM RAM.
 #define AUDIO_BLOCK_SIZE 512
 SAMPLE AUDIO_BUFFER_IN[AUDIO_BLOCK_SIZE];
 SAMPLE AUDIO_BUFFER_OUT[AUDIO_BLOCK_SIZE];
 
-//#define AUDIO_BUFFER_IN    AUDIO_REC_START_ADDR     /* In SDRAM */
-//#define AUDIO_BUFFER_OUT   (AUDIO_REC_START_ADDR + (AUDIO_BLOCK_SIZE * 2)) /* In SDRAM */
-
-typedef enum
+Audio *Audio::instance()
 {
-  BUFFER_OFFSET_NONE = 0,
-  BUFFER_OFFSET_HALF = 1,
-  BUFFER_OFFSET_FULL = 2,
-}BUFFER_StateTypeDef;
+	static Audio *g_audio = 0;
 
-uint32_t  audio_rec_buffer_state;
+	if(g_audio == 0)
+		g_audio = new Audio();
 
-
+	return g_audio;
+}
 
 Audio::Audio()
 {
 }
 
+// Set up I2S and DMA to shovel audio in and out simultaneously.
 Audio::STATUS Audio::init()
 {
 	if(AUDIO_OK != BSP_AUDIO_IN_OUT_Init(INPUT_DEVICE_DIGITAL_MICROPHONE_2, OUTPUT_DEVICE_HEADPHONE, kSampleRate, kSampleBits, kSampleChannels))
@@ -52,12 +48,12 @@ Audio::STATUS Audio::init()
 	return kStatusOk;
 }
 
+// Start shoveling audio.
 Audio::STATUS Audio::start()
 {
 	  /* Initialize SDRAM buffers */
 	  memset((uint16_t*)AUDIO_BUFFER_IN, 0, AUDIO_BLOCK_SIZE*2);
 	  memset((uint16_t*)AUDIO_BUFFER_OUT, 0, AUDIO_BLOCK_SIZE*2);
-	  audio_rec_buffer_state = BUFFER_OFFSET_NONE;
 
 	  /* Start Recording */
 	  if(AUDIO_OK != BSP_AUDIO_IN_Record((uint16_t*)AUDIO_BUFFER_IN, AUDIO_BLOCK_SIZE))
@@ -71,6 +67,7 @@ Audio::STATUS Audio::start()
 	  return kStatusOk;
 }
 
+// Stop shoveling audio.
 Audio::STATUS Audio::stop()
 {
     if(AUDIO_OK != BSP_AUDIO_IN_Stop(CODEC_PDWN_SW))
@@ -82,37 +79,22 @@ Audio::STATUS Audio::stop()
     return kStatusOk;
 }
 
-void Audio::process()
+// Fill up one outgoing buffer. Pull the data from the audio processing chain.
+SAMPLE *currentAudioBuffer = 0;
+void Audio::pullBuffer(SAMPLE *dest)
 {
-	/* Wait end of half block recording */
-	while(audio_rec_buffer_state != BUFFER_OFFSET_HALF)
-		;
-
-	audio_rec_buffer_state = BUFFER_OFFSET_NONE;
-
-	/* Copy recorded 1st half block */
-	memcpy((uint8_t *)(AUDIO_BUFFER_OUT),
-		   (uint8_t *)(AUDIO_BUFFER_IN),
-		   AUDIO_BLOCK_SIZE);
-
-	/* Wait end of one block recording */
-	while(audio_rec_buffer_state != BUFFER_OFFSET_FULL)
-		;
-
-	audio_rec_buffer_state = BUFFER_OFFSET_NONE;
-
-	/* Copy recorded 2nd half block */
-	memcpy((uint8_t *)(AUDIO_BUFFER_OUT) + AUDIO_BLOCK_SIZE,
-		   (uint8_t *)(AUDIO_BUFFER_IN) + AUDIO_BLOCK_SIZE,
-		   AUDIO_BLOCK_SIZE);
+	memcpy(dest, currentAudioBuffer, AUDIO_BLOCK_SIZE);
 }
 
-unsigned Audio::getData(SAMPLE **data)
-{
-	*data = AUDIO_BUFFER_OUT;
-	return AUDIO_BLOCK_SIZE;
-}
+//// Get a copy of the most recent audio buffer.
+//unsigned Audio::getData(SAMPLE **data)
+//{
+//	*data = AUDIO_BUFFER_OUT;
+//	return AUDIO_BLOCK_SIZE;
+//}
 
+
+// Callbacks.
 extern "C" {
 /**
   * @brief Manages the DMA Transfer complete interrupt.
@@ -121,8 +103,8 @@ extern "C" {
   */
 void BSP_AUDIO_IN_TransferComplete_CallBack(void)
 {
-  audio_rec_buffer_state = BUFFER_OFFSET_FULL;
-  return;
+	// This input buffer is ready for processing.
+	currentAudioBuffer = &AUDIO_BUFFER_IN[AUDIO_BLOCK_SIZE / 2];
 }
 
 /**
@@ -132,9 +114,25 @@ void BSP_AUDIO_IN_TransferComplete_CallBack(void)
   */
 void BSP_AUDIO_IN_HalfTransfer_CallBack(void)
 {
-  audio_rec_buffer_state = BUFFER_OFFSET_HALF;
-  return;
+	// This input buffer is ready for processing.
+	currentAudioBuffer = &AUDIO_BUFFER_IN[0];
 }
+
+/* User Callbacks: user has to implement these functions in his code if they are needed. */
+/* This function is called when the requested data has been completely transferred.*/
+void    BSP_AUDIO_OUT_TransferComplete_CallBack(void)
+{
+	// Output buffer needs filling. Get some data for it.
+	Audio::instance()->pullBuffer(&AUDIO_BUFFER_OUT[AUDIO_BLOCK_SIZE / 2]);
+}
+
+/* This function is called when half of the requested buffer has been transferred. */
+void    BSP_AUDIO_OUT_HalfTransfer_CallBack(void)
+{
+	// Output buffer needs filling. Get some data for it.
+	Audio::instance()->pullBuffer(&AUDIO_BUFFER_OUT[0]);
+}
+
 
 /**
   * @brief  Audio IN Error callback function.

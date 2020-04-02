@@ -20,7 +20,22 @@ typedef int16_t SAMPLE;
 class Audio
 {
 public:
-	Audio();
+
+	static Audio *instance();
+/*
+	class Frame
+	{
+	public:
+		enum {
+			kFrameSamples = 512
+		}
+
+		Frame();
+
+		SAMPLE _data[kFrameSamples];
+	};
+*/
+
 
 	enum STATUS {
 		kStatusOk,
@@ -30,8 +45,19 @@ public:
 	STATUS init();
 	STATUS start();
 	STATUS stop();
-	void process();
+//	void process();
 	unsigned getData(SAMPLE **data);
+
+	void pullBuffer(SAMPLE *dest);
+
+private:
+	Audio();
+	/*
+	Frame    _inFrame[4];
+	volatile unsigned _inFrameHead;
+	volatile unsigned _inFrameTail;
+*/
+
 
 #ifdef OLD
 	void record();
