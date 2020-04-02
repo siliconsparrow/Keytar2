@@ -8,34 +8,23 @@
 #ifndef AUDIO_H_
 #define AUDIO_H_
 
-#include <stdint.h>
+#include "AudioFilter.h"
 
-typedef int16_t SAMPLE;
+// Line-in filter. Pulls audio from a microphone or other external source.
+class FilterLineIn : public AudioFilter
+{
+public:
+	FilterLineIn();
+	virtual ~FilterLineIn();
 
-#ifdef OLD
-#define AUDIO_IN_PCM_BUFFER_SIZE                   4*2304 /* buffer size in half-word */
-#define AUDIO_OUT_BUFFER_SIZE                      8192
-#endif
+	virtual void fillFrame(Sample *frame);
+};
 
+// Audio class controls the Codec and drives the audio processing.
 class Audio
 {
 public:
-
 	static Audio *instance();
-/*
-	class Frame
-	{
-	public:
-		enum {
-			kFrameSamples = 512
-		}
-
-		Frame();
-
-		SAMPLE _data[kFrameSamples];
-	};
-*/
-
 
 	enum STATUS {
 		kStatusOk,
@@ -45,29 +34,18 @@ public:
 	STATUS init();
 	STATUS start();
 	STATUS stop();
-//	void process();
-	unsigned getData(SAMPLE **data);
 
-	void pullBuffer(SAMPLE *dest);
+	void setFilterChain(AudioFilter *f);
+
+	//	void process();
+	//unsigned getData(SAMPLE **data);
+
+	void pullBuffer(Sample *dest);
 
 private:
 	Audio();
-	/*
-	Frame    _inFrame[4];
-	volatile unsigned _inFrameHead;
-	volatile unsigned _inFrameTail;
-*/
 
-
-#ifdef OLD
-	void record();
-	void playback();
-
-	unsigned getBuffer(int16_t **buf);
-	void     fillBuffer(const int16_t *audioData, unsigned nSamples);
-#endif // OLD
-
-private:
+	AudioFilter *_filterChain;
 };
 
 #endif /* AUDIO_H_ */

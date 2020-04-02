@@ -71,7 +71,9 @@ int main()
     // Init audio.
     printf("Init audio...");
     fflush(stdout);
+    FilterLineIn mic;
     if(Audio::kStatusOk == Audio::instance()->init()) {
+    	Audio::instance()->setFilterChain(&mic);
     	printf("OK\n");
     } else {
     	printf("Fail\n");

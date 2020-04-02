@@ -13,17 +13,28 @@
 #include "stm32746g_discovery_audio.h"
 #include <string.h>
 
-enum {
-	kSampleRate = I2S_AUDIOFREQ_22K,
-	kSampleBits = 16,
-	kSampleChannels = 2
-};
-
 // DMA buffers to send and receive audio.
 // TODO: Might be faster if I put it in DTCM RAM.
-#define AUDIO_BLOCK_SIZE 512
-SAMPLE AUDIO_BUFFER_IN[AUDIO_BLOCK_SIZE];
-SAMPLE AUDIO_BUFFER_OUT[AUDIO_BLOCK_SIZE];
+#define AUDIO_BLOCK_SIZE (kAudioFrameSize * sizeof(Sample))
+Sample *AUDIO_BUFFER_IN = (Sample *)0x20000000;
+Sample *AUDIO_BUFFER_OUT = &AUDIO_BUFFER_IN[AUDIO_BLOCK_SIZE];
+
+//Sample  AUDIO_BUFFER_IN[AUDIO_BLOCK_SIZE];
+//Sample  AUDIO_BUFFER_OUT[AUDIO_BLOCK_SIZE];
+Sample *currentAudioBuffer = 0;
+
+FilterLineIn::FilterLineIn()
+{
+}
+
+FilterLineIn::~FilterLineIn()
+{
+}
+
+void FilterLineIn::fillFrame(Sample *frame)
+{
+	memcpy(frame, currentAudioBuffer, kAudioFrameSize * sizeof(Sample));
+}
 
 Audio *Audio::instance()
 {
@@ -36,6 +47,7 @@ Audio *Audio::instance()
 }
 
 Audio::Audio()
+	: _filterChain(0)
 {
 }
 
@@ -79,12 +91,23 @@ Audio::STATUS Audio::stop()
     return kStatusOk;
 }
 
-// Fill up one outgoing buffer. Pull the data from the audio processing chain.
-SAMPLE *currentAudioBuffer = 0;
-void Audio::pullBuffer(SAMPLE *dest)
+// Set up the audio processing chain. This should only be changed when
+// the audio processing is stopped.
+void Audio::setFilterChain(AudioFilter *f)
 {
-	memcpy(dest, currentAudioBuffer, AUDIO_BLOCK_SIZE);
+	_filterChain = f;
 }
+
+// Fill up one outgoing buffer. Pull the data from the audio processing chain.
+void Audio::pullBuffer(Sample *dest)
+{
+	_filterChain->fillFrame(dest);
+	//memcpy(dest, currentAudioBuffer, AUDIO_BLOCK_SIZE);
+}
+
+
+
+
 
 //// Get a copy of the most recent audio buffer.
 //unsigned Audio::getData(SAMPLE **data)
