@@ -158,6 +158,7 @@ namespace Gui
 	{
 	public:
 		Meter(const Rect &pos);
+		virtual ~Meter() { }
 
 		virtual void draw(Gfx &gfx);
 
@@ -176,6 +177,7 @@ namespace Gui
 	{
 	public:
 		Button(const Rect &pos, const char *label, void (onClick)());
+		virtual ~Button() { }
 
 		virtual void onTouch(int x, int y);
 		virtual void onRelease();
@@ -196,6 +198,7 @@ namespace Gui
 	{
 	public:
 		TextWindow(const Rect &r);
+		virtual ~TextWindow() { }
 
 		virtual void draw(Gfx &gfx);
 
@@ -213,6 +216,27 @@ namespace Gui
 		void clearLine(Gfx &gfx);
 	};
 
+	// *******************************************
+	// ** Simple text label.
+
+	class Label
+		: public Obj
+	{
+	public:
+		enum {
+			kMaxText = 100
+		};
+
+		Label(const Rect &r, const char *text);
+		virtual ~Label() { }
+
+		void setText(const char *text);
+
+		virtual void draw(Gfx &gfx);
+
+	private:
+		char _text[kMaxText];
+	};
 
 	// *******************************************
 	// ** Manage screen and UI events.
@@ -224,7 +248,7 @@ namespace Gui
 
 		static Gui *instance();
 
-		void add(Obj &obj);
+		void add(Obj *obj);
 		void tick();
 		void clearScreen();
 		int  consoleWrite(const char *ptr, int len, Gfx::Colour col = Gfx::kColourText);

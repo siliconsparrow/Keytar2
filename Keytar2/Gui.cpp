@@ -8,6 +8,7 @@
 #include "Gui.h"
 #include "stm32746g_discovery_ts.h"  // Touch screen
 #include "stm32746g_discovery_lcd.h" // LCD
+#include "PerfMon.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -325,6 +326,27 @@ namespace Gui
 
 
 	// *******************************************
+	// ** Simple text label.
+
+	Label::Label(const Rect &r, const char *text)
+		: Obj(r)
+	{
+		setText(text);
+	}
+
+	void Label::setText(const char *text)
+	{
+		strncpy(_text, text, kMaxText);
+		dirty();
+	}
+
+	void Label::draw(Gfx &gfx)
+	{
+		gfx.clear();
+		gfx.drawText(2, 2, _text);
+	}
+
+	// *******************************************
 	// ** Manage screen and UI events.
 
 	Gui::Gui()
@@ -350,7 +372,7 @@ namespace Gui
 		// Clear the screen.
 		clearScreen();
 
-		add(_console);
+		add(&_console);
 		_console._gfx._bg = Gfx::kColourBlack;
 		_console._gfx.clear();
 	}
@@ -362,10 +384,10 @@ namespace Gui
 	}
 
 	// Add a new GUI object to the screen.
-	void Gui::add(Obj &obj)
+	void Gui::add(Obj *obj)
 	{
 		if(_nObj < kMaxObjects) {
-			_obj[_nObj++] = &obj;
+			_obj[_nObj++] = obj;
 		}
 	}
 
@@ -392,17 +414,21 @@ namespace Gui
 		uint32_t tNow = HAL_GetTick();
 		uint32_t dt = tNow - _tLastBlink;
 		if(dt >= kBlinkTimeMs) {
+	    	PerfMon::enter(PerfMon::Gui);
 			_cursBlink = !_cursBlink;
 			_console._gfx.restore();
 			_console.blinkCursor(_console._gfx, _cursBlink);
 			_tLastBlink = tNow;
+	    	PerfMon::leave();
 		}
 
 		// Redraw anything that needs to be redrawn.
 		for(unsigned i = 0; i < _nObj; i++) {
 			Obj *obj = _obj[i];
 			if(obj->checkDirty()) {
+		    	PerfMon::enter(PerfMon::Gui);
 				draw(obj);
+		    	PerfMon::leave();
 			}
 		}
 

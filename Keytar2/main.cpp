@@ -26,6 +26,7 @@
 //#include "sd_diskio.h"
 #include "Audio.h"
 #include "usbd_conf.h"
+#include "PerfMon.h"
 #include <stdio.h>
 #include "main.h"
 
@@ -53,14 +54,17 @@ int main()
     HAL_Init();
     SystemClock_Config(); // Set a faster core speed (216MHz)
 
+    PerfMon::init();
+
     // Set up screen and text rendering.
-//    Gui::Gui gui;
     Gui::Gui *gui = new Gui::Gui();
-    printf(">>> Disco Board GUI Test <<<\n\n");
-/*
+    printf(">> Disco Board Audio Test <<\n\n");
+
+    /*
+    // Start up USB Mass storage device to access the SD card.
     printf("Init USB...");
     fflush(stdout);
-    if(USBD_OK == USB_MSC_Init()) { // Start up USB Mass storage device to access the SD card.
+    if(USBD_OK == USB_MSC_Init()) {
     	printf("OK\n");
     } else {
     	printf("FAIL\n");
@@ -83,8 +87,10 @@ int main()
     // Set up on-screen controls.
     Gui::Button btnWav(Gui::Rect(10, 10, 146, 30), "PLAY WAV", &fnPlayWav);
     Gui::Meter meterAudio(Gui::Rect(180, 10, 256, 30));
-    gui->add(btnWav);
-    gui->add(meterAudio);
+    Gui::Label lblPerf(Gui::Rect(10, 50, 146, 30), "CPU: -");
+    gui->add(&btnWav);
+    gui->add(&meterAudio);
+    gui->add(&lblPerf);
 
 #if 0
     printf("Mounting SD card...\n");
@@ -125,10 +131,28 @@ int main()
     	printf("Fail\n");
     }
 
+    uint32_t _tLastPerfUpdate = 0;
+
     // Main loop
     while(1)
     {
     	gui->tick();
+
+		uint32_t tNow = HAL_GetTick();
+		uint32_t dt = tNow - _tLastPerfUpdate;
+		if(dt >= 1000) {
+			char buf[16];
+			unsigned perf[PerfMon::nPids];
+			unsigned n = PerfMon::report(perf);
+			int tot = 0;
+			for(int i = 0; i < PerfMon::nPids; i++)
+				tot += perf[i];
+			int p = 100 - ((100 * perf[PerfMon::Idle]) / tot);
+			sprintf(buf, "CPU: %d%%", p);
+			lblPerf.setText(buf);
+			_tLastPerfUpdate = tNow;
+		}
+
 
 //#ifdef ENABLE_AUDIO
 //    	// Process audio.

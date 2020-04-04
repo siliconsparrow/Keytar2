@@ -38,6 +38,7 @@ SOURCES = \
 	stm32f7xx_hal_pcd.c \
 	stm32f7xx_hal_pcd_ex.c \
 	stm32f7xx_hal_sai.c \
+	stm32f7xx_hal_tim.c \
 	stm32f7xx_ll_fmc.c \
 	stm32f7xx_hal_sdram.c \
 	stm32f7xx_hal_ltdc.c \
@@ -66,6 +67,7 @@ SOURCES = \
 	crash.cpp \
 	syscalls.cpp \
 	tinycpp.cpp \
+	PerfMon.cpp \
 	main.cpp
 
 #	sd_diskio.c \
