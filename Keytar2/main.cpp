@@ -54,43 +54,40 @@ int main()
     HAL_Init();
     SystemClock_Config(); // Set a faster core speed (216MHz)
 
-    PerfMon::init();
+    perfInit();
 
     // Set up screen and text rendering.
     Gui::Gui *gui = new Gui::Gui();
     printf(">> Disco Board Audio Test <<\n\n");
 
-    /*
     // Start up USB Mass storage device to access the SD card.
-    printf("Init USB...");
-    fflush(stdout);
     if(USBD_OK == USB_MSC_Init()) {
-    	printf("OK\n");
+    	printf("USB init OK\n");
     } else {
-    	printf("FAIL\n");
+    	printf("USB init failed!\n");
     }
-*/
 
 #ifdef ENABLE_AUDIO
     // Init audio.
-    printf("Init audio...");
-    fflush(stdout);
     FilterLineIn mic;
     if(Audio::kStatusOk == Audio::instance()->init()) {
     	Audio::instance()->setFilterChain(&mic);
-    	printf("OK\n");
+    	printf("Audio init OK\n");
     } else {
-    	printf("Fail\n");
+    	printf("Audio init failed!\n");
     }
 #endif // ENABLE_AUDIO
 
     // Set up on-screen controls.
     Gui::Button btnWav(Gui::Rect(10, 10, 146, 30), "PLAY WAV", &fnPlayWav);
     Gui::Meter meterAudio(Gui::Rect(180, 10, 256, 30));
-    Gui::Label lblPerf(Gui::Rect(10, 50, 146, 30), "CPU: -");
+    Gui::Label *lblPerf[nPids];
+    for(int i = 0; i < nPids; i++) {
+    	lblPerf[i] = new Gui::Label(Gui::Rect(10, 50 + (i * 12), 146, 30), perfPidName[i]);
+    	gui->add(lblPerf[i]);
+    }
     gui->add(&btnWav);
     gui->add(&meterAudio);
-    gui->add(&lblPerf);
 
 #if 0
     printf("Mounting SD card...\n");
@@ -123,13 +120,13 @@ int main()
 #endif // 0
 
 
-    printf("Start audio streaming...");
-    fflush(stdout);
+#ifdef ENABLE_AUDIO
     if(Audio::kStatusOk == Audio::instance()->start()) {
-    	printf("OK\n");
+    	printf("Audio streaming started.\n");
     } else {
-    	printf("Fail\n");
+    	printf("Audio streaming failed to start!\n");
     }
+#endif // ENABLE_AUDIO
 
     uint32_t _tLastPerfUpdate = 0;
 
@@ -138,28 +135,27 @@ int main()
     {
     	gui->tick();
 
+    	// Update CPU usage.
 		uint32_t tNow = HAL_GetTick();
 		uint32_t dt = tNow - _tLastPerfUpdate;
 		if(dt >= 1000) {
-			char buf[16];
-			unsigned perf[PerfMon::nPids];
-			unsigned n = PerfMon::report(perf);
+			char buf[32];
+			unsigned perf[nPids];
+			unsigned n = perfReport(perf);
 			int tot = 0;
-			for(int i = 0; i < PerfMon::nPids; i++)
+			for(int i = 0; i < nPids; i++)
 				tot += perf[i];
-			int p = 100 - ((100 * perf[PerfMon::Idle]) / tot);
-			sprintf(buf, "CPU: %d%%", p);
-			lblPerf.setText(buf);
+
+			for(int i = 0; i < nPids; i++) {
+				int p = (100 * perf[i]) / tot;
+				sprintf(buf, "%6s: %3d%%", perfPidName[i], p);
+				lblPerf[i]->setText(buf);
+			}
 			_tLastPerfUpdate = tNow;
 		}
 
-
-//#ifdef ENABLE_AUDIO
-//    	// Process audio.
-//    	audio.process();
-//#endif // ENABLE_AUDIO
-
     	/*
+    	// Display audio level graph.
     	SAMPLE *audioData;
     	unsigned nSamples = audio.getData(&audioData);
 		int max = 0;
@@ -170,6 +166,6 @@ int main()
 		}
 
 		meterAudio.setValue(max >> 8);
-*/
+    	 */
     }
 }

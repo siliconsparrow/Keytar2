@@ -44,8 +44,12 @@ _heap_end = 0x20040000;
 MEMORY
 {
 FLASH (rx)  : ORIGIN = 0x08000000, LENGTH = 1024K /* Program ROM */
-DTCM (rw)   : ORIGIN = 0x20000000, LENGTH = 64K   /* Tight-coupled RAM for DMA and stuff. */
-RAM (xrw)   : ORIGIN = 0x20010000, LENGTH = 256K  /* Internal SRAM */
+RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 320K
+
+/*
+DTCM (rw)   : ORIGIN = 0x20000000, LENGTH = 64K    Tight-coupled RAM for DMA and stuff. 
+RAM (xrw)   : ORIGIN = 0x20010000, LENGTH = 256K   Internal SRAM 
+*/
 }
 
 /* Define output sections */

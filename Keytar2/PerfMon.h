@@ -8,35 +8,29 @@
 #ifndef PERFMON_H_
 #define PERFMON_H_
 
-class PerfMon {
-public:
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
 
-	PerfMon();
+enum ProcessId {
+	pidIdle,
+	pidAudio,
+	pidGui,
+	pidUsb,
+	pidDisk,
 
-	enum ProcessId {
-		Idle,
-		Audio,
-		Gui,
-		Disk,
-
-		nPids
-	};
-
-	static void init();
-
-	static void     enter(ProcessId pid);
-	static void     leave();
-	static unsigned report(unsigned *result);
-
-private:
-	ProcessId _currentPid;
-	unsigned  _sp;
-	unsigned  _stat[nPids];
-	ProcessId _stack[nPids * 2];
-
-	void resetStats();
-	void timerReset();
-	unsigned timerGet();
+	nPids
 };
+
+extern const char *perfPidName[];
+
+void     perfInit();
+void     perfEnter(unsigned pid);
+void     perfLeave();
+unsigned perfReport(unsigned *result);
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
 
 #endif /* PERFMON_H_ */

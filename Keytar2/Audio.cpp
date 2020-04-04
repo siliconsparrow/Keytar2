@@ -10,18 +10,17 @@
 
 //#include "../Components/wm8994/wm8994.h"
 #include "Audio.h"
-#include "PerfMon.h"
 #include "stm32746g_discovery_audio.h"
 #include <string.h>
 
 // DMA buffers to send and receive audio.
 // TODO: Might be faster if I put it in DTCM RAM.
 #define AUDIO_BLOCK_SIZE (kAudioFrameSize * sizeof(Sample))
-Sample *AUDIO_BUFFER_IN = (Sample *)0x20000000;
-Sample *AUDIO_BUFFER_OUT = &AUDIO_BUFFER_IN[AUDIO_BLOCK_SIZE];
+//Sample *AUDIO_BUFFER_IN = (Sample *)0x20000000;
+//Sample *AUDIO_BUFFER_OUT = &AUDIO_BUFFER_IN[AUDIO_BLOCK_SIZE];
 
-//Sample  AUDIO_BUFFER_IN[AUDIO_BLOCK_SIZE];
-//Sample  AUDIO_BUFFER_OUT[AUDIO_BLOCK_SIZE];
+Sample  AUDIO_BUFFER_IN[AUDIO_BLOCK_SIZE];
+Sample  AUDIO_BUFFER_OUT[AUDIO_BLOCK_SIZE];
 Sample *currentAudioBuffer = 0;
 
 FilterLineIn::FilterLineIn()
@@ -103,7 +102,6 @@ void Audio::setFilterChain(AudioFilter *f)
 void Audio::pullBuffer(Sample *dest)
 {
 	_filterChain->fillFrame(dest);
-	//memcpy(dest, currentAudioBuffer, AUDIO_BLOCK_SIZE);
 }
 
 
@@ -146,19 +144,15 @@ void BSP_AUDIO_IN_HalfTransfer_CallBack(void)
 /* This function is called when the requested data has been completely transferred.*/
 void    BSP_AUDIO_OUT_TransferComplete_CallBack(void)
 {
-	PerfMon::enter(PerfMon::Audio);
 	// Output buffer needs filling. Get some data for it.
 	Audio::instance()->pullBuffer(&AUDIO_BUFFER_OUT[AUDIO_BLOCK_SIZE / 2]);
-	PerfMon::leave();
 }
 
 /* This function is called when half of the requested buffer has been transferred. */
 void    BSP_AUDIO_OUT_HalfTransfer_CallBack(void)
 {
-	PerfMon::enter(PerfMon::Audio);
 	// Output buffer needs filling. Get some data for it.
 	Audio::instance()->pullBuffer(&AUDIO_BUFFER_OUT[0]);
-	PerfMon::leave();
 }
 
 

@@ -414,21 +414,21 @@ namespace Gui
 		uint32_t tNow = HAL_GetTick();
 		uint32_t dt = tNow - _tLastBlink;
 		if(dt >= kBlinkTimeMs) {
-	    	PerfMon::enter(PerfMon::Gui);
+	    	perfEnter(pidGui);
 			_cursBlink = !_cursBlink;
 			_console._gfx.restore();
 			_console.blinkCursor(_console._gfx, _cursBlink);
 			_tLastBlink = tNow;
-	    	PerfMon::leave();
+	    	perfLeave();
 		}
 
 		// Redraw anything that needs to be redrawn.
 		for(unsigned i = 0; i < _nObj; i++) {
 			Obj *obj = _obj[i];
 			if(obj->checkDirty()) {
-		    	PerfMon::enter(PerfMon::Gui);
+		    	perfEnter(pidGui);
 				draw(obj);
-		    	PerfMon::leave();
+		    	perfLeave();
 			}
 		}
 
@@ -438,6 +438,7 @@ namespace Gui
 		BSP_TS_GetState(&ts);
 		if(ts.touchDetected > 0) {
 			if(!_touch) {
+				perfEnter(pidGui);
 				int x = ts.touchX[0];
 				int y = ts.touchY[0];
 				_touchObj = objectAt(x,y);
@@ -450,11 +451,14 @@ namespace Gui
 					_touchObj->onTouch(x, y);
 				}
 				_touch = true;
+				perfLeave();
 			}
 		} else {
 			if(_touchObj != 0) {
+				perfEnter(pidGui);
 				_touchObj->onRelease();
 				_touchObj = 0;
+				perfLeave();
 			}
 			_touch = false;
 		}

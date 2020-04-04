@@ -1,4 +1,5 @@
 #include "stm32f7xx_it.h"
+#include "PerfMon.h"
 
 /******************************************************************************/
 /*            Cortex-M7 Processor Exceptions Handlers                         */
@@ -156,7 +157,9 @@ void OTG_FS_IRQHandler(void)
 void OTG_HS_IRQHandler(void)
 #endif
 {
-  HAL_PCD_IRQHandler(&hpcd);
+	perfEnter(pidUsb);
+	HAL_PCD_IRQHandler(&hpcd);
+	perfLeave();
 }
 
 /**
@@ -166,7 +169,9 @@ void OTG_HS_IRQHandler(void)
   */
 void BSP_SDMMC_IRQHandler(void)
 {
-  HAL_SD_IRQHandler(&uSdHandle);
+	perfEnter(pidDisk);
+	HAL_SD_IRQHandler(&uSdHandle);
+	perfLeave();
 }
 
 /**
@@ -176,7 +181,9 @@ void BSP_SDMMC_IRQHandler(void)
 */
 void BSP_SDMMC_DMA_Tx_IRQHandler(void)
 {
-  HAL_DMA_IRQHandler(uSdHandle.hdmatx);
+	perfEnter(pidDisk);
+	HAL_DMA_IRQHandler(uSdHandle.hdmatx);
+	perfLeave();
 }
 
 /**
@@ -186,7 +193,9 @@ void BSP_SDMMC_DMA_Tx_IRQHandler(void)
 */
 void BSP_SDMMC_DMA_Rx_IRQHandler(void)
 {
-  HAL_DMA_IRQHandler(uSdHandle.hdmarx);
+	perfEnter(pidDisk);
+	HAL_DMA_IRQHandler(uSdHandle.hdmarx);
+	perfLeave();
 }
 
 /**
@@ -196,7 +205,9 @@ void BSP_SDMMC_DMA_Rx_IRQHandler(void)
   */
 void AUDIO_OUT_SAIx_DMAx_IRQHandler(void)
 {
-  HAL_DMA_IRQHandler(haudio_out_sai.hdmatx);
+	perfEnter(pidAudio);
+	HAL_DMA_IRQHandler(haudio_out_sai.hdmatx);
+	perfLeave();
 }
 
 /**
@@ -206,7 +217,9 @@ void AUDIO_OUT_SAIx_DMAx_IRQHandler(void)
   */
 void AUDIO_IN_SAIx_DMAx_IRQHandler(void)
 {
-  HAL_DMA_IRQHandler(haudio_in_sai.hdmarx);
+	perfEnter(pidAudio);
+	HAL_DMA_IRQHandler(haudio_in_sai.hdmarx);
+	perfLeave();
 }
 
 

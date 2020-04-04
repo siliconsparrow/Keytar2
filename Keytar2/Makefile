@@ -67,7 +67,7 @@ SOURCES = \
 	crash.cpp \
 	syscalls.cpp \
 	tinycpp.cpp \
-	PerfMon.cpp \
+	PerfMon.c \
 	main.cpp
 
 #	sd_diskio.c \
