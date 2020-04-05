@@ -53,6 +53,8 @@
 PCD_HandleTypeDef hpcd;
 USBD_HandleTypeDef USBD_Device;
 
+int usbIsConnected() { return USBD_Device.dev_state == USBD_STATE_CONFIGURED ? 1 : 0; }
+
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 
@@ -323,6 +325,9 @@ void HAL_PCD_ISOINIncompleteCallback(PCD_HandleTypeDef *hpcd, uint8_t epnum)
   */
 void HAL_PCD_ConnectCallback(PCD_HandleTypeDef *hpcd)
 {
+	  printf("USB connected.\n");
+
+
   USBD_LL_DevConnected(hpcd->pData);
 }
 
@@ -333,6 +338,9 @@ void HAL_PCD_ConnectCallback(PCD_HandleTypeDef *hpcd)
   */
 void HAL_PCD_DisconnectCallback(PCD_HandleTypeDef *hpcd)
 {
+	  printf("USB disconnected.\n");
+
+
   USBD_LL_DevDisconnected(hpcd->pData);
 }
 

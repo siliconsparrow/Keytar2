@@ -103,6 +103,7 @@ extern "C" {
 #endif
 
 /* Exported functions ------------------------------------------------------- */
+int usbIsConnected();
 
 
 int USB_MSC_Init();

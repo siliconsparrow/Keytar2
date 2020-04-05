@@ -96,6 +96,8 @@ USBD_StorageTypeDef USBD_DISK_fops = {
 };
 /* Private functions ---------------------------------------------------------*/
 
+void sdCardToUsb();
+
 /**
   * @brief  Initializes the storage unit (medium)
   * @param  lun: Logical unit number
@@ -103,14 +105,13 @@ USBD_StorageTypeDef USBD_DISK_fops = {
   */
 int8_t STORAGE_Init(uint8_t lun)
 {
-	printf("Initialize SD card...");
-	fflush(stdout);
+	sdCardToUsb();
 	if(MSD_OK == BSP_SD_Init()) {
-		printf("OK\n");
+		printf("SD card init in mass-storage mode\n");
 		return 0;
 	}
 
-	printf("FAIL!\n");
+	printf("Failed to init SD card for mass-storage mode!\n");
 	return -1;
 }
 
@@ -272,4 +273,3 @@ void BSP_SD_ReadCpltCallback(void)
 
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-

@@ -22,9 +22,9 @@
 
 #include "platform.h"
 #include "Gui.h"
-//#include "ff_gen_drv.h"
-//#include "sd_diskio.h"
 #include "Audio.h"
+#include "FilterWavPlay.h"
+#include "FileSystem.h"
 #include "usbd_conf.h"
 #include "PerfMon.h"
 #include <stdio.h>
@@ -34,12 +34,67 @@
 // to debug something else, it is handy to turn it off temporarily.
 #define ENABLE_AUDIO
 
-//WAV wavTest;
+#define WAV_TEST_FILENAME "/Minimal Heaven vol. 1/LS-MH1 Laser Sweep 10.wav"
+FilterWavPlay *g_wavTest = 0;
 
 void fnPlayWav()
 {
-//	wavTest.play();
+	if(g_wavTest != 0) {
+		g_wavTest->play();
+	}
 }
+
+// The SD card cannot safely be used by the USB and the audio
+// system at the same time. This must be called every now and
+// then to handle switching between the two devices.
+bool _sdToUsb = false;
+void sdCardPoll()
+{
+	if(_sdToUsb) {
+		if(0 == usbIsConnected()) {
+			FileSystem::instance()->resume();
+			_sdToUsb = false;
+		}
+	}
+}
+
+// Called by the USB driver to obtain possession of the SD card.
+// Closes all files and unmounts the card.
+extern "C" void sdCardToUsb()
+{
+	_sdToUsb = true;
+	FileSystem::instance()->suspend();
+}
+
+
+//// Test function to cat a file to the console.
+//void printFile(const TCHAR *filename)
+//{
+//	FileSystem::File f;
+//
+//	if(!f.open(filename)) {
+//		fprintf(stderr, "File open failed.\n");
+//		return;
+//	}
+//
+//	while(1) {
+//		uint8_t buf[100];
+//		int count = f.read(buf, 100);
+//
+//		if(count == 0) {
+//			break;
+//		}
+//
+//		if(count < 0) {
+//			fprintf(stderr, "File read failed.\n");
+//			return;
+//		}
+//
+//		fwrite(buf, 1, count, stdout);
+//	}
+//
+//	printf("\n");
+//}
 
 int main()
 {
@@ -61,17 +116,25 @@ int main()
     printf(">> Disco Board Audio Test <<\n\n");
 
     // Start up USB Mass storage device to access the SD card.
+    // TODO: There must be a better way to detect USB connection!
     if(USBD_OK == USB_MSC_Init()) {
     	printf("USB init OK\n");
     } else {
     	printf("USB init failed!\n");
     }
-
 #ifdef ENABLE_AUDIO
     // Init audio.
     FilterLineIn mic;
+    FilterWavPlay wav;
+    if(wav.load(WAV_TEST_FILENAME)) {
+    	printf("WAV loaded OK.\n");
+    } else {
+    	fprintf(stderr, "Failed to load WAV file!\n");
+    }
+    g_wavTest = &wav;
     if(Audio::kStatusOk == Audio::instance()->init()) {
-    	Audio::instance()->setFilterChain(&mic);
+    	Audio::instance()->setFilterChain(&wav);
+    	//Audio::instance()->setFilterChain(&mic);
     	printf("Audio init OK\n");
     } else {
     	printf("Audio init failed!\n");
@@ -83,42 +146,11 @@ int main()
     Gui::Meter meterAudio(Gui::Rect(180, 10, 256, 30));
     Gui::Label *lblPerf[nPids];
     for(int i = 0; i < nPids; i++) {
-    	lblPerf[i] = new Gui::Label(Gui::Rect(10, 50 + (i * 12), 146, 30), perfPidName[i]);
+    	lblPerf[i] = new Gui::Label(Gui::Rect(10, 50 + (i * 12), 146, 12), perfPidName[i]);
     	gui->add(lblPerf[i]);
     }
     gui->add(&btnWav);
     gui->add(&meterAudio);
-
-#if 0
-    printf("Mounting SD card...\n");
-    FATFS SDFatFs;  /* File system object for SD card logical drive */
-    char SDPath[4]; /* SD card logical drive path */
-    if(FATFS_LinkDriver(&SD_Driver, SDPath) == 0) {
-    	printf("SD card mounted OK.\n");
-    	if(f_mount(&SDFatFs, (TCHAR const*)SDPath, 0) != FR_OK) {
-    		printf("Filesystem mount failed.\n");
-    	} else {
-        	printf("Filesystem mounted ok.\n");
-
-            DIR dj;         /* Directory object */
-            FILINFO fno;    /* File information */
-
-            FRESULT fr = f_findfirst(&dj, &fno, "", "*");
-            while (fr == FR_OK && fno.fname[0]) {         /* Repeat while an item is found */
-            	if(0 != (fno.fattrib & AM_DIR)) {
-            		printf("%s/\n", fno.fname);
-            	} else {
-            		printf("%s\n", fno.fname);                /* Print the object name */
-            	}
-                fr = f_findnext(&dj, &fno);               /* Search for next item */
-            }
-            f_closedir(&dj);
-    	}
-    } else {
-    	printf("SD card mount failed.\n");
-    }
-#endif // 0
-
 
 #ifdef ENABLE_AUDIO
     if(Audio::kStatusOk == Audio::instance()->start()) {
@@ -130,6 +162,19 @@ int main()
 
     uint32_t _tLastPerfUpdate = 0;
 
+    FileSystem::instance(); // Mount the file system.
+
+//    bool _usbConnected = false;
+//    Gui::Label _lblUSB(Gui::Rect(180, 30, 100, 16), "");
+//    gui->add(&_lblUSB);
+
+//    printFile("/licence.txt");
+
+    unsigned perfCache[nPids];
+    for(int i = 0; i < nPids; i++) {
+    	perfCache[i] = 255;
+    }
+
     // Main loop
     while(1)
     {
@@ -138,7 +183,7 @@ int main()
     	// Update CPU usage.
 		uint32_t tNow = HAL_GetTick();
 		uint32_t dt = tNow - _tLastPerfUpdate;
-		if(dt >= 1000) {
+		if(dt >= 500) {
 			char buf[32];
 			unsigned perf[nPids];
 			unsigned n = perfReport(perf);
@@ -148,11 +193,32 @@ int main()
 
 			for(int i = 0; i < nPids; i++) {
 				int p = (100 * perf[i]) / tot;
-				sprintf(buf, "%6s: %3d%%", perfPidName[i], p);
-				lblPerf[i]->setText(buf);
+				if(p != perfCache[i]) {
+					sprintf(buf, "%6s: %3d%%", perfPidName[i], p);
+					lblPerf[i]->setText(buf);
+					perfCache[i] = p;
+				}
 			}
 			_tLastPerfUpdate = tNow;
 		}
+
+		// There doesn't seem to be any kind of USB disconnect event
+		// so I have to poll for USB disconnect.
+		sdCardPoll();
+
+//		// Check USB connection status.
+//		if(0 != usbIsConnected()) {
+//			if(!_usbConnected) {
+//				_lblUSB.setText("[USB]");
+//				_usbConnected = true;
+//			}
+//		} else {
+//			if(_usbConnected) {
+//				_lblUSB.setText("");
+//				_usbConnected = false;
+//			}
+//		}
+
 
     	/*
     	// Display audio level graph.

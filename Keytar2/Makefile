@@ -63,19 +63,21 @@ SOURCES = \
 	stm32746g_discovery_ts.c \
 	stm32746g_discovery_audio.c \
 	Audio.cpp \
+	FilterWavPlay.cpp \
 	Gui.cpp \
+	FileSystem.cpp \
+	ff_gen_drv.c \
+	sd_diskio.c \
+	ff.c \
+	unicode.c \
+	syscall.c \
+	diskio.c \
 	crash.cpp \
 	syscalls.cpp \
 	tinycpp.cpp \
 	PerfMon.c \
 	main.cpp
 
-#	sd_diskio.c \
-	ff_gen_drv.c \
-	diskio.c \
-	ff.c \
-	syscall.c \
-	unicode.c \
 
 	
 #	$(wildcard *.c) \
