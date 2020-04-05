@@ -20,10 +20,10 @@
 // TODO: Make all interrupt priorities defined symbols, perhaps in hal_conf.h so
 //       I can adjust them to avoid deadlocks.
 
+#include "FilterSample.h"
 #include "platform.h"
 #include "Gui.h"
 #include "Audio.h"
-#include "FilterWavPlay.h"
 #include "FilterMixer.h"
 #include "FileSystem.h"
 #include "usbd_conf.h"
@@ -36,7 +36,7 @@
 #define ENABLE_AUDIO
 
 #define WAV_TEST_FILENAME "/Minimal Heaven vol. 1/LS-MH1 Laser Sweep 10.wav"
-FilterWavPlay *g_wavTest = 0;
+FilterSample *g_wavTest = 0;
 
 void fnPlayWav()
 {
@@ -126,7 +126,8 @@ int main()
 #ifdef ENABLE_AUDIO
     // Init audio.
     FilterLineIn mic;
-    FilterWavPlay wav;
+    //FilterWavStream wav;
+    FilterSample wav;
     if(wav.load(WAV_TEST_FILENAME)) {
     	printf("WAV loaded OK.\n");
     } else {

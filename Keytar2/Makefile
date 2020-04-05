@@ -63,8 +63,11 @@ SOURCES = \
 	stm32746g_discovery_ts.c \
 	stm32746g_discovery_audio.c \
 	Audio.cpp \
-	FilterWavPlay.cpp \
+	FilterWavStream.cpp \
 	FilterMixer.cpp \
+	FilterSample.cpp \
+	WavFile.cpp \
+	AudioFormat.cpp \
 	Gui.cpp \
 	FileSystem.cpp \
 	ff_gen_drv.c \
