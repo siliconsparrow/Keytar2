@@ -72,14 +72,15 @@ void FilterWavPlay::fillFrame(Sample *frame)
 {
 	if(_isPlaying) {
 		int nBytes = sizeof(Sample) * kAudioFrameSize;
-		int cb = _f.read((uint8_t *)frame, nBytes);
+		uint8_t *dest = (uint8_t *)frame;
+		int cb = _f.read(dest, nBytes);
 		if(cb < 0) {
 			_isPlaying = false;
 			_f.seek(sizeof(WAVE_FormatTypeDef));
 		}
 		if(cb < nBytes) {
 			// end of file.
-			memset(&((uint8_t *)frame)[cb], 0, nBytes - cb);
+			memset(&dest[cb], 0, nBytes - cb);
 			_isPlaying = false;
 			_f.seek(sizeof(WAVE_FormatTypeDef));
 		}

@@ -6,6 +6,7 @@
  */
 
 #include "FilterMixer.h"
+#include <string.h>
 
 FilterMixer::MixChannel::MixChannel()
 	: _source(0)
@@ -21,7 +22,7 @@ FilterMixer::FilterMixer(int nChannels)
 
 void FilterMixer::setChannelSource(unsigned channel, AudioFilter *filter, unsigned level)
 {
-	_channel[channel]._source = channel;
+	_channel[channel]._source = filter;
 	_channel[channel]._level = level;
 }
 
@@ -36,10 +37,10 @@ void FilterMixer::fillFrame(Sample *frame)
 	memset(frame, 0, sizeof(Sample) * kAudioFrameSize);
 
 	// Find out the total of all the mixer levels.
-	int total = 0;
-	for(unsigned i = 0; i < _nChannels; i++) {
-		total += (int)_channel[i]._level;
-	}
+	int total = kMaxLevel * _nChannels;
+//	for(unsigned i = 0; i < _nChannels; i++) {
+//		total += (int)_channel[i]._level;
+//	}
 
 	// Mix each sample from each channel.
 	Sample src[kAudioFrameSize]; // Working buffer.

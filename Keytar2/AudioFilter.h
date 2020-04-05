@@ -11,7 +11,7 @@
 #include <stdint.h>
 
 // This type is used to store audio samples.
-typedef uint16_t Sample;
+typedef int16_t Sample;
 
 // The disco board can support up to 32 bits, 192kHz, see stm32f7xx_hal_i2s.h for more information.
 

@@ -11,9 +11,11 @@
 #include "AudioFilter.h"
 
 class FilterMixer
+	: public AudioFilter
 {
 public:
 	FilterMixer(int nChannels);
+	virtual ~FilterMixer() { }
 
 	enum {
 		kMaxLevel = 32767,

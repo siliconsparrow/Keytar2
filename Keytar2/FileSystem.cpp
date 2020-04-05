@@ -29,7 +29,6 @@ FileSystem::FileSystem()
 	memset(_file, 0, sizeof(_file));
 
 	mount();
-	dirTest();
 }
 
 // Close all files and unmount the card so the USB system
@@ -47,7 +46,6 @@ void FileSystem::resume()
 {
 	_suspended = false;
 	mount();
-	//dirTest();
 }
 
 bool FileSystem::unmount()
@@ -115,19 +113,19 @@ void FileSystem::unregisterFile(File *f)
 }
 
 
-void dirTestDelegate(FileSystem::DirEntry &entry)
-{
-	if(entry.isDirectory()) {
-		printf("%s/\n", entry.getName());
-	} else {
-		printf("%s (%d bytes)\n", entry.getName(), entry.getSize());
-	}
-}
-
-void FileSystem::dirTest()
-{
-	readDir("", "*", dirTestDelegate);
-}
+//void dirTestDelegate(FileSystem::DirEntry &entry)
+//{
+//	if(entry.isDirectory()) {
+//		printf("%s/\n", entry.getName());
+//	} else {
+//		printf("%s (%d bytes)\n", entry.getName(), entry.getSize());
+//	}
+//}
+//
+//void FileSystem::dirTest()
+//{
+//	readDir("", "*", dirTestDelegate);
+//}
 
 FileSystem::File::File()
 {

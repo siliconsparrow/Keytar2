@@ -24,6 +24,7 @@
 #include "Gui.h"
 #include "Audio.h"
 #include "FilterWavPlay.h"
+#include "FilterMixer.h"
 #include "FileSystem.h"
 #include "usbd_conf.h"
 #include "PerfMon.h"
@@ -132,8 +133,12 @@ int main()
     	fprintf(stderr, "Failed to load WAV file!\n");
     }
     g_wavTest = &wav;
+    FilterMixer mixer(2);
+    mixer.setChannelSource(0, &mic, FilterMixer::kMaxLevel);
+    mixer.setChannelSource(1, &wav, FilterMixer::kMaxLevel / 16);
     if(Audio::kStatusOk == Audio::instance()->init()) {
-    	Audio::instance()->setFilterChain(&wav);
+    	Audio::instance()->setFilterChain(&mixer);
+    	//Audio::instance()->setFilterChain(&wav);
     	//Audio::instance()->setFilterChain(&mic);
     	printf("Audio init OK\n");
     } else {
@@ -143,14 +148,14 @@ int main()
 
     // Set up on-screen controls.
     Gui::Button btnWav(Gui::Rect(10, 10, 146, 30), "PLAY WAV", &fnPlayWav);
-    Gui::Meter meterAudio(Gui::Rect(180, 10, 256, 30));
+    //Gui::Meter meterAudio(Gui::Rect(180, 10, 256, 30));
     Gui::Label *lblPerf[nPids];
     for(int i = 0; i < nPids; i++) {
     	lblPerf[i] = new Gui::Label(Gui::Rect(10, 50 + (i * 12), 146, 12), perfPidName[i]);
     	gui->add(lblPerf[i]);
     }
     gui->add(&btnWav);
-    gui->add(&meterAudio);
+    //gui->add(&meterAudio);
 
 #ifdef ENABLE_AUDIO
     if(Audio::kStatusOk == Audio::instance()->start()) {
