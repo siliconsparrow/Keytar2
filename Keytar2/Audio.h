@@ -14,8 +14,8 @@
 class FilterLineIn : public AudioFilter
 {
 public:
-	FilterLineIn();
-	virtual ~FilterLineIn();
+	FilterLineIn() { }
+	virtual ~FilterLineIn() { }
 
 	virtual void fillFrame(Sample *frame);
 };
@@ -43,9 +43,17 @@ public:
 	void pullBuffer(Sample *dest);
 
 private:
+	AudioFilter *_filterChain;
+
 	Audio();
 
-	AudioFilter *_filterChain;
+	int      initCodec(uint16_t InputDevice, uint16_t OutputDevice, uint32_t AudioFreq, uint32_t BitRes, uint32_t ChnlNbr);
+
+	void     initClock();
+	void     codecInit(uint16_t audiodevs);
+	void     codecReset();
+	uint32_t codecPlay();
+	void     codecStop();
 };
 
 #endif /* AUDIO_H_ */

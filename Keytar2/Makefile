@@ -62,13 +62,16 @@ SOURCES = \
 	stm32746g_discovery_lcd.c \
 	stm32746g_discovery_ts.c \
 	stm32746g_discovery_audio.c \
+	Systick.cpp \
 	Audio.cpp \
 	FilterWavStream.cpp \
 	FilterMixer.cpp \
 	FilterSample.cpp \
+	FilterVocoder.cpp \
 	WavFile.cpp \
 	AudioFormat.cpp \
 	Gui.cpp \
+	PerfMeter.cpp \
 	FileSystem.cpp \
 	ff_gen_drv.c \
 	sd_diskio.c \
@@ -106,6 +109,7 @@ INCLUDES = -I. \
 	-I$(SDK_PATH)/Drivers/STM32F7xx_HAL_Driver/Inc \
 	-I$(SDK_PATH)/Drivers/BSP/STM32746G-Discovery \
 	-I$(SDK_PATH)/Drivers/BSP/Components/ft5336 \
+	-I$(SDK_PATH)/Drivers/BSP/Components/wm8994 \
 	-I$(SDK_PATH)/Middlewares/Third_Party/FatFs/src \
 	-I$(SDK_PATH)/Middlewares/ST/STM32_USB_Device_Library/Core/Inc \
 	-I$(SDK_PATH)/Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Inc

@@ -11,11 +11,18 @@
 //  FatFs OK
 //  USB device (mass storage) OK
 //  USB device (MIDI) ??
-//  I2S in and out
+//  I2S in and out OK
 //  UART
 //  DAC maybe? probably not.
 //  Watchdog
 //  DMA (does that count as a peripheral?)
+
+// Things I could do next:
+//   Time-domain effects (delay, granulation)
+//   Drum machine
+//   Software synth
+//   FFT
+
 
 // TODO: Make all interrupt priorities defined symbols, perhaps in hal_conf.h so
 //       I can adjust them to avoid deadlocks.
@@ -26,8 +33,10 @@
 #include "Audio.h"
 #include "FilterMixer.h"
 #include "FileSystem.h"
+#include "FilterVocoder.h"
 #include "usbd_conf.h"
 #include "PerfMon.h"
+#include "PerfMeter.h"
 #include <stdio.h>
 #include "main.h"
 
@@ -97,6 +106,29 @@ extern "C" void sdCardToUsb()
 //	printf("\n");
 //}
 
+// Quickie to take left-channel data and copy it to the right channel
+// so I get both channels playing microphone data.
+class FilterLeftToStereo : public AudioFilter
+{
+public:
+	FilterLeftToStereo() : _source(0) { }
+	virtual ~FilterLeftToStereo() { }
+
+	void setSource(AudioFilter *src) { _source = src; }
+
+	virtual void fillFrame(Sample *frame)
+	{
+		_source->fillFrame(frame);
+		StereoSample *ss = (StereoSample *)frame;
+		for(int i = 0; i < kAudioFrameSize / 2; i++) {
+			ss[i].r = ss[i].l;
+		}
+	}
+
+private:
+	AudioFilter *_source;
+};
+
 int main()
 {
     MPU_Config();       // Configure CPU
@@ -107,6 +139,7 @@ int main()
          - Set NVIC Group Priority to 4
          - Low Level Initialization
        */
+    uwTickFreq = HAL_TICK_FREQ_100HZ;
     HAL_Init();
     SystemClock_Config(); // Set a faster core speed (216MHz)
 
@@ -126,21 +159,25 @@ int main()
 #ifdef ENABLE_AUDIO
     // Init audio.
     FilterLineIn mic;
+    //FilterLeftToStereo smic;
+    //smic.setSource(&mic);
+
+    //FilterVocoder vocoder;
+    //vocoder.setSource(&smic);
     //FilterWavStream wav;
-    FilterSample wav;
-    if(wav.load(WAV_TEST_FILENAME)) {
-    	printf("WAV loaded OK.\n");
-    } else {
-    	fprintf(stderr, "Failed to load WAV file!\n");
-    }
-    g_wavTest = &wav;
-    FilterMixer mixer(2);
-    mixer.setChannelSource(0, &mic, FilterMixer::kMaxLevel);
-    mixer.setChannelSource(1, &wav, FilterMixer::kMaxLevel / 16);
+    //FilterSample wav;
+    //if(wav.load(WAV_TEST_FILENAME)) {
+    //	printf("WAV loaded OK.\n");
+    //} else {
+    //	fprintf(stderr, "Failed to load WAV file!\n");
+    //}
+    //g_wavTest = &wav;
+    FilterMixer mixer(1);
+    mixer.setChannelSource(0, &mic, FilterMixer::kMaxLevel / 16);
+    //mixer.setChannelSource(1, &wav, FilterMixer::kMaxLevel / 16);
     if(Audio::kStatusOk == Audio::instance()->init()) {
     	Audio::instance()->setFilterChain(&mixer);
-    	//Audio::instance()->setFilterChain(&wav);
-    	//Audio::instance()->setFilterChain(&mic);
+    	//Audio::instance()->setFilterChain(&vocoder);
     	printf("Audio init OK\n");
     } else {
     	printf("Audio init failed!\n");
@@ -148,14 +185,10 @@ int main()
 #endif // ENABLE_AUDIO
 
     // Set up on-screen controls.
-    Gui::Button btnWav(Gui::Rect(10, 10, 146, 30), "PLAY WAV", &fnPlayWav);
+    //Gui::Button btnWav(Gui::Rect(10, 10, 146, 30), "PLAY WAV", &fnPlayWav);
+    PerfMeter perf(gui, 480 - PerfMeter::kWidth, 0);
     //Gui::Meter meterAudio(Gui::Rect(180, 10, 256, 30));
-    Gui::Label *lblPerf[nPids];
-    for(int i = 0; i < nPids; i++) {
-    	lblPerf[i] = new Gui::Label(Gui::Rect(10, 50 + (i * 12), 146, 12), perfPidName[i]);
-    	gui->add(lblPerf[i]);
-    }
-    gui->add(&btnWav);
+    //gui->add(&btnWav);
     //gui->add(&meterAudio);
 
 #ifdef ENABLE_AUDIO
@@ -176,55 +209,15 @@ int main()
 
 //    printFile("/licence.txt");
 
-    unsigned perfCache[nPids];
-    for(int i = 0; i < nPids; i++) {
-    	perfCache[i] = 255;
-    }
-
     // Main loop
     while(1)
     {
     	gui->tick();
 
-    	// Update CPU usage.
-		uint32_t tNow = HAL_GetTick();
-		uint32_t dt = tNow - _tLastPerfUpdate;
-		if(dt >= 500) {
-			char buf[32];
-			unsigned perf[nPids];
-			unsigned n = perfReport(perf);
-			int tot = 0;
-			for(int i = 0; i < nPids; i++)
-				tot += perf[i];
-
-			for(int i = 0; i < nPids; i++) {
-				int p = (100 * perf[i]) / tot;
-				if(p != perfCache[i]) {
-					sprintf(buf, "%6s: %3d%%", perfPidName[i], p);
-					lblPerf[i]->setText(buf);
-					perfCache[i] = p;
-				}
-			}
-			_tLastPerfUpdate = tNow;
-		}
 
 		// There doesn't seem to be any kind of USB disconnect event
 		// so I have to poll for USB disconnect.
 		sdCardPoll();
-
-//		// Check USB connection status.
-//		if(0 != usbIsConnected()) {
-//			if(!_usbConnected) {
-//				_lblUSB.setText("[USB]");
-//				_usbConnected = true;
-//			}
-//		} else {
-//			if(_usbConnected) {
-//				_lblUSB.setText("");
-//				_usbConnected = false;
-//			}
-//		}
-
 
     	/*
     	// Display audio level graph.

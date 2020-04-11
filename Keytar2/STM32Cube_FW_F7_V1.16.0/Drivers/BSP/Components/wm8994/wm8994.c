@@ -615,13 +615,15 @@ uint32_t wm8994_Init(uint16_t DeviceAddr, uint16_t OutputInputDevice, uint8_t Vo
     {
 
       /* Disable mute on IN1L, IN1L Volume = +0dB */
-      counter += CODEC_IO_Write(DeviceAddr, 0x18, 0x000B);
+        //counter += CODEC_IO_Write(DeviceAddr, 0x18, 0x000B);
+        counter += CODEC_IO_Write(DeviceAddr, 0x18, 0x0003);
 
       /* Disable mute on IN1R, IN1R Volume = +0dB */
-      counter += CODEC_IO_Write(DeviceAddr, 0x1A, 0x000B);
+        //counter += CODEC_IO_Write(DeviceAddr, 0x1A, 0x000B);
+        counter += CODEC_IO_Write(DeviceAddr, 0x1A, 0x0003);
 
       /* AIF ADC1 HPF enable, HPF cut = hifi mode fc=4Hz at fs=48kHz */
-      counter += CODEC_IO_Write(DeviceAddr, 0x410, 0x1800);
+      counter += CODEC_IO_Write(DeviceAddr, 0x410, 0x8000 /*0x1800*/);
     }
     /* Volume Control */
     wm8994_SetVolume(DeviceAddr, Volume);

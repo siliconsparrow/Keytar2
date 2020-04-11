@@ -13,6 +13,11 @@
 // This type is used to store audio samples.
 typedef int16_t Sample;
 
+struct __attribute__((packed)) StereoSample {
+	Sample l;
+	Sample r;
+};
+
 // The disco board can support up to 32 bits, 192kHz, see stm32f7xx_hal_i2s.h for more information.
 
 // Supported sample rates.

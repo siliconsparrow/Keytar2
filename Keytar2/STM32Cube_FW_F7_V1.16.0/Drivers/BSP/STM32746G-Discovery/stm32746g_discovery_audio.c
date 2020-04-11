@@ -155,10 +155,10 @@ uint16_t __IO AudioInVolume = DEFAULT_AUDIO_IN_VOLUME;
 /** @defgroup STM32746G_DISCOVERY_AUDIO_Private_Function_Prototypes STM32746G_DISCOVERY AUDIO Private Function Prototypes
   * @{
   */
-static void SAIx_Out_Init(uint32_t AudioFreq);
-static void SAIx_Out_DeInit(void);
-static void SAIx_In_Init(uint32_t SaiOutMode, uint32_t SlotActive, uint32_t AudioFreq);
-static void SAIx_In_DeInit(void);
+void SAIx_Out_Init(uint32_t AudioFreq);
+void SAIx_Out_DeInit(void);
+void SAIx_In_Init(uint32_t SaiOutMode, uint32_t SlotActive, uint32_t AudioFreq);
+void SAIx_In_DeInit(void);
 /**
   * @}
   */ 
@@ -711,7 +711,7 @@ __weak void BSP_AUDIO_OUT_ClockConfig(SAI_HandleTypeDef *hsai, uint32_t AudioFre
   *         and user can update this configuration using 
   * @retval None
   */
-static void SAIx_Out_Init(uint32_t AudioFreq)
+void SAIx_Out_Init(uint32_t AudioFreq)
 {
   /* Initialize the haudio_out_sai Instance parameter */
   haudio_out_sai.Instance = AUDIO_OUT_SAIx;
@@ -767,7 +767,7 @@ static void SAIx_Out_Init(uint32_t AudioFreq)
   * @brief  Deinitializes the output Audio Codec audio interface (SAI).
   * @retval None
   */
-static void SAIx_Out_DeInit(void)
+void SAIx_Out_DeInit(void)
 {
   /* Initialize the haudio_out_sai Instance parameter */
   haudio_out_sai.Instance = AUDIO_OUT_SAIx;
@@ -1244,7 +1244,7 @@ __weak void BSP_AUDIO_IN_MspDeInit(SAI_HandleTypeDef *hsai, void *Params)
   * @param  AudioFreq: Audio frequency to be configured for the SAI peripheral.
   * @retval None
   */
-static void SAIx_In_Init(uint32_t SaiOutMode, uint32_t SlotActive, uint32_t AudioFreq)
+void SAIx_In_Init(uint32_t SaiOutMode, uint32_t SlotActive, uint32_t AudioFreq)
 {
   /* Initialize SAI2 block A in MASTER RX */
   /* Initialize the haudio_out_sai Instance parameter */
@@ -1349,7 +1349,7 @@ static void SAIx_In_Init(uint32_t SaiOutMode, uint32_t SlotActive, uint32_t Audi
   * @brief  Deinitializes the output Audio Codec audio interface (SAI).
   * @retval None
   */
-static void SAIx_In_DeInit(void)
+void SAIx_In_DeInit(void)
 {
   /* Initialize the haudio_in_sai Instance parameter */
   haudio_in_sai.Instance = AUDIO_IN_SAIx;

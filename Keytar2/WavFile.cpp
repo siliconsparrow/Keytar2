@@ -8,7 +8,7 @@
 #include "WavFile.h"
 
 // WAV file header.
-typedef __attribute__((packed)) struct {
+struct __attribute__((packed)) WAVE_FormatTypeDef {
   uint32_t ChunkID;       /* 0 */
   uint32_t FileSize;      /* 4 */
   uint32_t FileFormat;    /* 8 */
@@ -23,7 +23,7 @@ typedef __attribute__((packed)) struct {
   uint16_t BitPerSample;  /* 34 */
   uint32_t SubChunk2ID;   /* 36 */
   uint32_t SubChunk2Size; /* 40 */
-}WAVE_FormatTypeDef;
+};
 
 WavFile::WavFile()
 {
