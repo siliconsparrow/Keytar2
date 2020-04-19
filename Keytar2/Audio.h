@@ -14,10 +14,19 @@
 class FilterLineIn : public AudioFilter
 {
 public:
-	FilterLineIn() { }
+	enum Channel {
+		chanLeft,
+		chanRight,
+		chanBoth
+	};
+
+	FilterLineIn(Channel chan);
 	virtual ~FilterLineIn() { }
 
 	virtual void fillFrame(Sample *frame);
+
+private:
+	Channel _chan;
 };
 
 // Audio class controls the Codec and drives the audio processing.

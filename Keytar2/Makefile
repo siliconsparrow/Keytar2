@@ -68,6 +68,7 @@ SOURCES = \
 	FilterMixer.cpp \
 	FilterSample.cpp \
 	FilterVocoder.cpp \
+	FilterReverbFir.cpp \
 	WavFile.cpp \
 	AudioFormat.cpp \
 	Gui.cpp \
@@ -124,7 +125,6 @@ COMMONFLAGS = -fmessage-length=0 -specs=nano.specs -mthumb -mcpu=cortex-m7 -fsho
 
 
 # Debug and optimization flags.
-#DEBUGFLAGS = -O3 -g0
 DEBUGFLAGS = -D__DEBUG -g -O0
 RELEASEFLAGS = -O3 -g0
 

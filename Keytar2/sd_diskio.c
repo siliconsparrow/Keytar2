@@ -48,6 +48,10 @@
 #include "sd_diskio.h"
 
 
+#define USE_DMA
+extern __IO uint32_t writestatus, readstatus;
+
+
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* use the default SD timout as defined in the platform BSP driver*/
@@ -155,9 +159,25 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
 {
   DRESULT res = RES_ERROR;
 
-  if(BSP_SD_ReadBlocks((uint32_t*)buff,
+#ifdef USE_DMA
+  if(BSP_SD_ReadBlocks_DMA((uint32_t*)buff,
                        (uint32_t) (sector),
-                       count, SD_TIMEOUT) == MSD_OK)
+                       count) == MSD_OK)
+  {
+	    while (readstatus == 0)
+	    {
+	    }
+	    readstatus = 0;
+
+	while (BSP_SD_GetCardState() != SD_TRANSFER_OK)
+	{
+	}
+	res = RES_OK;
+  }
+#else
+  if(BSP_SD_ReadBlocks((uint32_t*)buff,
+					   (uint32_t) (sector),
+					   count, SD_TIMEOUT) == MSD_OK)
   {
     /* wait until the read operation is finished */
     while(BSP_SD_GetCardState()!= MSD_OK)
@@ -165,6 +185,7 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
     }
     res = RES_OK;
   }
+#endif // USE_DMA
 
   return res;
 }
@@ -182,9 +203,27 @@ DRESULT SD_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
 {
   DRESULT res = RES_ERROR;
 
-  if(BSP_SD_WriteBlocks((uint32_t*)buff,
+#ifdef USE_DMA
+  if(BSP_SD_WriteBlocks_DMA((uint32_t*)buff,
                         (uint32_t)(sector),
-                        count, SD_TIMEOUT) == MSD_OK)
+                        count) == MSD_OK)
+  {
+	    /* Wait for Tx Transfer completion */
+	    while (writestatus == 0)
+	    {
+	    }
+	    writestatus = 0;
+
+	    /* Wait until SD card is ready to use for new operation */
+	    while (BSP_SD_GetCardState() != SD_TRANSFER_OK)
+	    {
+	    }
+
+  }
+#else
+	  if(BSP_SD_WriteBlocks((uint32_t*)buff,
+	                        (uint32_t)(sector),
+	                        count, SD_TIMEOUT) == MSD_OK)
   {
 	/* wait until the Write operation is finished */
     while(BSP_SD_GetCardState() != MSD_OK)
@@ -192,6 +231,7 @@ DRESULT SD_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
     }
     res = RES_OK;
   }
+#endif // USE_DMA
 
   return res;
 }

@@ -33,7 +33,9 @@
 #include "Audio.h"
 #include "FilterMixer.h"
 #include "FileSystem.h"
+#include "FilterReverbFir.h"
 #include "FilterVocoder.h"
+#include "FilterWavStream.h"
 #include "usbd_conf.h"
 #include "PerfMon.h"
 #include "PerfMeter.h"
@@ -44,7 +46,9 @@
 // to debug something else, it is handy to turn it off temporarily.
 #define ENABLE_AUDIO
 
-#define WAV_TEST_FILENAME "/Minimal Heaven vol. 1/LS-MH1 Laser Sweep 10.wav"
+// #define WAV_TEST_FILENAME "/Minimal Heaven vol. 1/LS-MH1 Laser Sweep 10.wav"
+#define WAV_TEST_FILENAME "/Large FX Collection/LS LFXC Short-Sound 022.wav"
+
 FilterSample *g_wavTest = 0;
 
 void fnPlayWav()
@@ -76,58 +80,28 @@ extern "C" void sdCardToUsb()
 	FileSystem::instance()->suspend();
 }
 
-
-//// Test function to cat a file to the console.
-//void printFile(const TCHAR *filename)
-//{
-//	FileSystem::File f;
-//
-//	if(!f.open(filename)) {
-//		fprintf(stderr, "File open failed.\n");
-//		return;
-//	}
-//
-//	while(1) {
-//		uint8_t buf[100];
-//		int count = f.read(buf, 100);
-//
-//		if(count == 0) {
-//			break;
-//		}
-//
-//		if(count < 0) {
-//			fprintf(stderr, "File read failed.\n");
-//			return;
-//		}
-//
-//		fwrite(buf, 1, count, stdout);
-//	}
-//
-//	printf("\n");
-//}
-
 // Quickie to take left-channel data and copy it to the right channel
 // so I get both channels playing microphone data.
-class FilterLeftToStereo : public AudioFilter
-{
-public:
-	FilterLeftToStereo() : _source(0) { }
-	virtual ~FilterLeftToStereo() { }
-
-	void setSource(AudioFilter *src) { _source = src; }
-
-	virtual void fillFrame(Sample *frame)
-	{
-		_source->fillFrame(frame);
-		StereoSample *ss = (StereoSample *)frame;
-		for(int i = 0; i < kAudioFrameSize / 2; i++) {
-			ss[i].r = ss[i].l;
-		}
-	}
-
-private:
-	AudioFilter *_source;
-};
+//class FilterLeftToStereo : public AudioFilter
+//{
+//public:
+//	FilterLeftToStereo() : _source(0) { }
+//	virtual ~FilterLeftToStereo() { }
+//
+//	void setSource(AudioFilter *src) { _source = src; }
+//
+//	virtual void fillFrame(Sample *frame)
+//	{
+//		_source->fillFrame(frame);
+//		StereoSample *ss = (StereoSample *)frame;
+//		for(int i = 0; i < kAudioFrameSize / 2; i++) {
+//			ss[i].r = ss[i].l;
+//		}
+//	}
+//
+//private:
+//	AudioFilter *_source;
+//};
 
 int main()
 {
@@ -158,26 +132,29 @@ int main()
     }
 #ifdef ENABLE_AUDIO
     // Init audio.
-    FilterLineIn mic;
+    FilterLineIn mic(FilterLineIn::chanLeft);
     //FilterLeftToStereo smic;
     //smic.setSource(&mic);
 
     //FilterVocoder vocoder;
     //vocoder.setSource(&smic);
     //FilterWavStream wav;
-    //FilterSample wav;
-    //if(wav.load(WAV_TEST_FILENAME)) {
-    //	printf("WAV loaded OK.\n");
-    //} else {
-    //	fprintf(stderr, "Failed to load WAV file!\n");
-    //}
-    //g_wavTest = &wav;
-    FilterMixer mixer(1);
-    mixer.setChannelSource(0, &mic, FilterMixer::kMaxLevel / 16);
-    //mixer.setChannelSource(1, &wav, FilterMixer::kMaxLevel / 16);
+    FilterSample wav;
+    if(wav.load(WAV_TEST_FILENAME)) {
+    	printf("WAV loaded OK.\n");
+    } else {
+    	fprintf(stderr, "Failed to load WAV file!\n");
+    }
+    g_wavTest = &wav;
+
+    FilterReverbFir reverb;
+    reverb.setSource(&mic);
+
+    FilterMixer mixer(2);
+    mixer.setChannelSource(0, &reverb, FilterMixer::kMaxLevel / 16);
+    mixer.setChannelSource(1, &wav, FilterMixer::kMaxLevel / 16);
     if(Audio::kStatusOk == Audio::instance()->init()) {
     	Audio::instance()->setFilterChain(&mixer);
-    	//Audio::instance()->setFilterChain(&vocoder);
     	printf("Audio init OK\n");
     } else {
     	printf("Audio init failed!\n");
@@ -185,10 +162,10 @@ int main()
 #endif // ENABLE_AUDIO
 
     // Set up on-screen controls.
-    //Gui::Button btnWav(Gui::Rect(10, 10, 146, 30), "PLAY WAV", &fnPlayWav);
+    Gui::Button btnWav(Gui::Rect(10, 10, 146, 30), "PLAY WAV", &fnPlayWav);
     PerfMeter perf(gui, 480 - PerfMeter::kWidth, 0);
     //Gui::Meter meterAudio(Gui::Rect(180, 10, 256, 30));
-    //gui->add(&btnWav);
+    gui->add(&btnWav);
     //gui->add(&meterAudio);
 
 #ifdef ENABLE_AUDIO
