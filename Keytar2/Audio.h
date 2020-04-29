@@ -23,7 +23,7 @@ public:
 	FilterLineIn(Channel chan);
 	virtual ~FilterLineIn() { }
 
-	virtual void fillFrame(Sample *frame);
+	virtual void fillFrame(StereoSample *frame);
 
 private:
 	Channel _chan;
@@ -49,7 +49,7 @@ public:
 	//	void process();
 	//unsigned getData(SAMPLE **data);
 
-	void pullBuffer(Sample *dest);
+	void pullBuffer(StereoSample *dest);
 
 private:
 	AudioFilter *_filterChain;

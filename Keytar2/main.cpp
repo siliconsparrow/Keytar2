@@ -15,13 +15,15 @@
 //  UART
 //  DAC maybe? probably not.
 //  Watchdog
-//  DMA (does that count as a peripheral?)
+//  DMA OK
 
 // Things I could do next:
 //   Time-domain effects (delay, granulation)
 //   Drum machine
 //   Software synth
 //   FFT
+//   Memory management - separate DMA ram using __attribute__((segment)) or whatever. Stack in SRAM and malloc allocates from SDRAM.
+
 
 
 // TODO: Make all interrupt priorities defined symbols, perhaps in hal_conf.h so
@@ -132,7 +134,8 @@ int main()
     }
 #ifdef ENABLE_AUDIO
     // Init audio.
-    FilterLineIn mic(FilterLineIn::chanLeft);
+    FilterLineIn mic(FilterLineIn::chanBoth);
+
     //FilterLeftToStereo smic;
     //smic.setSource(&mic);
 
@@ -147,14 +150,14 @@ int main()
     }
     g_wavTest = &wav;
 
-    FilterReverbFir reverb;
-    reverb.setSource(&mic);
+    //FilterReverbFir reverb;
+    //reverb.setSource(&mic);
 
-    FilterMixer mixer(2);
-    mixer.setChannelSource(0, &reverb, FilterMixer::kMaxLevel / 16);
-    mixer.setChannelSource(1, &wav, FilterMixer::kMaxLevel / 16);
+    //FilterMixer mixer(2);
+    //mixer.setChannelSource(0, &reverb, FilterMixer::kMaxLevel / 16);
+    //mixer.setChannelSource(1, &wav, FilterMixer::kMaxLevel / 16);
     if(Audio::kStatusOk == Audio::instance()->init()) {
-    	Audio::instance()->setFilterChain(&mixer);
+    	Audio::instance()->setFilterChain(&mic);
     	printf("Audio init OK\n");
     } else {
     	printf("Audio init failed!\n");

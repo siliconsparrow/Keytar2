@@ -22,7 +22,7 @@ public:
 	void play();
 	void stop();
 
-	virtual void fillFrame(Sample *frame);
+	virtual void fillFrame(StereoSample *frame);
 
 private:
 	bool    _isPlaying;

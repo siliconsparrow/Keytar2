@@ -12,42 +12,42 @@
 #include "stm32746g_discovery_audio.h"
 #include <string.h>
 
-#define USE_PDM_MIC
+//#define USE_PDM_MIC
 
 // DMA buffers to send and receive audio.
 // These must be in DTCM RAM so they can be accessed by the DMA.
-#define AUDIO_BLOCK_SIZE (kAudioFrameSize * sizeof(Sample))
-Sample  AUDIO_BUFFER_IN[AUDIO_BLOCK_SIZE];
-Sample  AUDIO_BUFFER_OUT[AUDIO_BLOCK_SIZE];
-Sample *currentAudioBuffer = 0;
+#define AUDIO_BLOCK_SIZE (kAudioFrameSize * sizeof(StereoSample))
+uint16_t  AUDIO_BUFFER_IN[AUDIO_BLOCK_SIZE];
+uint16_t  AUDIO_BUFFER_OUT[AUDIO_BLOCK_SIZE];
+uint16_t *currentAudioBuffer = 0;
 
 FilterLineIn::FilterLineIn(Channel chan)
 	: _chan(chan)
 { }
 
 
-void FilterLineIn::fillFrame(Sample *frame)
+void FilterLineIn::fillFrame(StereoSample *frame)
 {
 	StereoSample *src = (StereoSample *)currentAudioBuffer;
-	StereoSample *dst = (StereoSample *)frame;
+
 	switch(_chan)
 	{
 	case chanLeft:
-		for(int i = 0; i < (kAudioFrameSize) / 2; i++) {
-			dst[i].l = src[i].l;
-			dst[i].r = src[i].l;
+		for(int i = 0; i < kAudioFrameSize; i++) {
+			frame[i].l = src[i].l;
+			frame[i].r = src[i].l;
 		}
 		break;
 
 	case chanRight:
-		for(int i = 0; i < (kAudioFrameSize) / 2; i++) {
-			dst[i].l = src[i].r;
-			dst[i].r = src[i].r;
+		for(int i = 0; i < kAudioFrameSize; i++) {
+			frame[i].l = src[i].r;
+			frame[i].r = src[i].r;
 		}
 		break;
 
 	default:
-		memcpy(frame, currentAudioBuffer, kAudioFrameSize * sizeof(Sample));
+		memcpy(frame, currentAudioBuffer, kAudioFrameSize * sizeof(StereoSample));
 		break;
 	}
 }
@@ -85,8 +85,8 @@ Audio::STATUS Audio::init()
 Audio::STATUS Audio::start()
 {
 	  /* Initialize SDRAM buffers */
-	  memset((uint16_t*)AUDIO_BUFFER_IN, 0, AUDIO_BLOCK_SIZE*2);
-	  memset((uint16_t*)AUDIO_BUFFER_OUT, 0, AUDIO_BLOCK_SIZE*2);
+	  memset((uint16_t*)AUDIO_BUFFER_IN, 0, AUDIO_BLOCK_SIZE * sizeof(uint16_t));
+	  memset((uint16_t*)AUDIO_BUFFER_OUT, 0, AUDIO_BLOCK_SIZE * sizeof(uint16_t));
 
 	  /* Start Recording */
 	  if(AUDIO_OK != BSP_AUDIO_IN_Record((uint16_t*)AUDIO_BUFFER_IN, AUDIO_BLOCK_SIZE))
@@ -120,7 +120,7 @@ void Audio::setFilterChain(AudioFilter *f)
 }
 
 // Fill up one outgoing buffer. Pull the data from the audio processing chain.
-void Audio::pullBuffer(Sample *dest)
+void Audio::pullBuffer(StereoSample *dest)
 {
 	_filterChain->fillFrame(dest);
 }
@@ -137,7 +137,7 @@ extern "C" {
 }
 
 // The BSP functions supplied in CUBEMX only support the PDM microphone but I want to use
-// the analogue line input so this is my custom init function.
+// the analogue line input so I need a custom init function.
 int Audio::initCodec(uint16_t InputDevice, uint16_t OutputDevice, uint32_t AudioFreq, uint32_t BitRes, uint32_t ChnlNbr)
 {
     int ret = AUDIO_ERROR;
@@ -170,7 +170,7 @@ int Audio::initCodec(uint16_t InputDevice, uint16_t OutputDevice, uint32_t Audio
     if (InputDevice == INPUT_DEVICE_DIGITAL_MICROPHONE_2) {
       slot_active = CODEC_AUDIOFRAME_SLOT_13;
     } else {
-      slot_active = CODEC_AUDIOFRAME_SLOT_02;
+      slot_active = CODEC_AUDIOFRAME_SLOT_0123;
     }
     SAIx_In_Init(SAI_MODEMASTER_TX, slot_active, AudioFreq);
 
@@ -192,7 +192,10 @@ int Audio::initCodec(uint16_t InputDevice, uint16_t OutputDevice, uint32_t Audio
     if(ret == AUDIO_OK)
     {
       /* Initialize the codec internal registers */
-      audio_drv->Init(AUDIO_I2C_ADDRESS, InputDevice | OutputDevice, 100, AudioFreq);
+    	uint8_t volume = 30; // 100;
+      audio_drv->Init(AUDIO_I2C_ADDRESS, InputDevice | OutputDevice, volume, AudioFreq);
+
+      audio_drv->SetVolume(AUDIO_I2C_ADDRESS, 90); // Volume ranges from 0 to 100.
     }
   return ret;
 }
@@ -227,14 +230,14 @@ extern "C" {
 	void    BSP_AUDIO_OUT_TransferComplete_CallBack(void)
 	{
 		// Output buffer needs filling. Get some data for it.
-		Audio::instance()->pullBuffer(&AUDIO_BUFFER_OUT[AUDIO_BLOCK_SIZE / 2]);
+		Audio::instance()->pullBuffer((StereoSample *)&AUDIO_BUFFER_OUT[AUDIO_BLOCK_SIZE / 2]);
 	}
 
 	/* This function is called when half of the requested buffer has been transferred. */
 	void    BSP_AUDIO_OUT_HalfTransfer_CallBack(void)
 	{
 		// Output buffer needs filling. Get some data for it.
-		Audio::instance()->pullBuffer(&AUDIO_BUFFER_OUT[0]);
+		Audio::instance()->pullBuffer((StereoSample *)&AUDIO_BUFFER_OUT[0]);
 	}
 
 

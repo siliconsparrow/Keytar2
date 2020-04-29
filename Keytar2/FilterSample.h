@@ -23,13 +23,13 @@ public:
 	void play();
 	void stop();
 
-	virtual void fillFrame(Sample *frame);
+	virtual void fillFrame(StereoSample *frame);
 
 private:
-	Sample   *_buf;
-	unsigned  _bufCount;
-	unsigned  _pos;
-	bool      _isPlaying;
+	StereoSample *_buf;
+	unsigned      _bufCount;
+	unsigned      _pos;
+	bool          _isPlaying;
 };
 
 #endif /* FILTERSAMPLE_H_ */

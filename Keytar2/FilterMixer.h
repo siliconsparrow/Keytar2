@@ -25,7 +25,7 @@ public:
 	void setChannelSource(unsigned channel, AudioFilter *filter, unsigned level = kDefaultLevel);
 	void setLevel(int channel, int level);
 
-	virtual void fillFrame(Sample *frame);
+	virtual void fillFrame(StereoSample *frame);
 
 private:
 	class MixChannel

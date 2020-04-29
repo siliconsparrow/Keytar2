@@ -13,6 +13,7 @@
 // This type is used to store audio samples.
 typedef int16_t Sample;
 
+// Now for a stereo sample.
 struct __attribute__((packed)) StereoSample {
 	Sample l;
 	Sample r;
@@ -47,7 +48,7 @@ public:
 	AudioFilter() { }
 	virtual ~AudioFilter() { }
 
-	virtual void fillFrame(Sample *frame) = 0;
+	virtual void fillFrame(StereoSample *frame) = 0;
 };
 
 #endif /* AUDIOFILTER_H_ */

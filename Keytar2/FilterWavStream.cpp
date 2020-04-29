@@ -37,10 +37,10 @@ void FilterWavStream::stop()
 	_isPlaying = false;
 }
 
-void FilterWavStream::fillFrame(Sample *frame)
+void FilterWavStream::fillFrame(StereoSample *frame)
 {
 	if(_isPlaying) {
-		int nBytes = sizeof(Sample) * kAudioFrameSize;
+		int nBytes = sizeof(StereoSample) * kAudioFrameSize;
 		uint8_t *dest = (uint8_t *)frame;
 		int cb = _f.readBlock(dest, nBytes);
 		if(cb < 0) {
@@ -55,6 +55,6 @@ void FilterWavStream::fillFrame(Sample *frame)
 		}
 	} else {
 		// Not currently playing, fill the buffer with silence.
-		memset(frame, 0, sizeof(Sample) * kAudioFrameSize);
+		memset(frame, 0, sizeof(StereoSample) * kAudioFrameSize);
 	}
 }

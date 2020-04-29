@@ -32,7 +32,7 @@ bool FilterSample::load(const TCHAR *wavFileName)
 	}
 
 	_bufCount = wf.getByteSize();
-	_buf = (Sample *)0xC0080000; //malloc(_bufCount);
+	_buf = (StereoSample *)0xC0080000; //malloc(_bufCount); // Must be in SDRAM because internal RAM is not big enough.
 	if(_buf == 0) {
 		return false;
 	}
@@ -41,7 +41,7 @@ bool FilterSample::load(const TCHAR *wavFileName)
 		return false;
 	}
 
-	_bufCount /= 2;
+	_bufCount /= sizeof(StereoSample);
 	return true;
 }
 
@@ -56,19 +56,19 @@ void FilterSample::stop()
 	_isPlaying = false;
 }
 
-void FilterSample::fillFrame(Sample *frame)
+void FilterSample::fillFrame(StereoSample *frame)
 {
 	if(_isPlaying) {
 		if(_pos + kAudioFrameSize < _bufCount) {
-			memcpy((uint8_t *)frame, (uint8_t *)&_buf[_pos], sizeof(Sample) * kAudioFrameSize);
+			memcpy((uint8_t *)frame, (uint8_t *)&_buf[_pos], sizeof(StereoSample) * kAudioFrameSize);
 			_pos += kAudioFrameSize;
 		} else {
-			unsigned nBytes = (_bufCount - _pos) * sizeof(Sample);
+			unsigned nBytes = (_bufCount - _pos) * sizeof(StereoSample);
 			memcpy((uint8_t *)frame, (uint8_t *)&_buf[_pos], nBytes);
-			memset(&((uint8_t *)frame)[nBytes], 0, (sizeof(Sample) * kAudioFrameSize) - nBytes);
+			memset(&((uint8_t *)frame)[nBytes], 0, (sizeof(StereoSample) * kAudioFrameSize) - nBytes);
 			_isPlaying = false;
 		}
 	} else {
-		memset((uint8_t *)frame, 0, sizeof(Sample) * kAudioFrameSize);
+		memset((uint8_t *)frame, 0, sizeof(StereoSample) * kAudioFrameSize);
 	}
 }

@@ -31,10 +31,10 @@ void FilterMixer::setLevel(int channel, int level)
 	_channel[channel]._level = level;
 }
 
-void FilterMixer::fillFrame(Sample *frame)
+void FilterMixer::fillFrame(StereoSample *frame)
 {
 	// Clear the frame.
-	memset(frame, 0, sizeof(Sample) * kAudioFrameSize);
+	memset(frame, 0, sizeof(StereoSample) * kAudioFrameSize);
 
 	// Find out the total of all the mixer levels.
 	int total = kMaxLevel * _nChannels;
@@ -43,12 +43,13 @@ void FilterMixer::fillFrame(Sample *frame)
 //	}
 
 	// Mix each sample from each channel.
-	Sample src[kAudioFrameSize]; // Working buffer.
+	StereoSample src[kAudioFrameSize]; // Working buffer.
 	for(unsigned chan = 0; chan < _nChannels; chan++) {
 		_channel[chan]._source->fillFrame(src);
 		int level = _channel[chan]._level;
 		for(unsigned i = 0; i < kAudioFrameSize; i++) {
-			frame[i] += (src[i] * level) / total;
+			frame[i].l += (src[i].l * level) / total;
+			frame[i].r += (src[i].r * level) / total;
 		}
 	}
 }

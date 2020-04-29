@@ -19,11 +19,11 @@ public:
 
 	void setSource(AudioFilter *source);
 
-	virtual void fillFrame(Sample *frame);
+	virtual void fillFrame(StereoSample *frame);
 
 private:
 	enum {
-		kBufSize = kSampleRate * kSampleChannels,
+		kBufSize = kSampleRate,
 		kMaxTaps = 16
 	};
 
@@ -34,7 +34,7 @@ private:
 	};
 
 	AudioFilter *_source;
-	Sample       _buffer[kBufSize];
+	StereoSample _buffer[kBufSize];
 	int          _bufHead;
 	int          _bufTail;
 	unsigned     _nTaps;

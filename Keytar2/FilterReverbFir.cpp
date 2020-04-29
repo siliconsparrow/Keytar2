@@ -44,22 +44,23 @@ unsigned FilterReverbFir::getOffset(unsigned offset) const
 	return _bufHead - offset;
 }
 
-void FilterReverbFir::fillFrame(Sample *frame)
+void FilterReverbFir::fillFrame(StereoSample *frame)
 {
 	// Get a frame from our source.
-	Sample src[kAudioFrameSize];
+	StereoSample src[kAudioFrameSize];
 	_source->fillFrame(src);
 
 	memcpy(&_buffer[_bufHead], src, sizeof(src));
 	_bufHead += kAudioFrameSize;
-	if(_bufHead >= 80000)
+	if(_bufHead >= 40000)
 		_bufHead = 0;
 	_bufTail += kAudioFrameSize;
-	if(_bufTail >= 80000)
+	if(_bufTail >= 40000)
 		_bufTail = 0;
 
 	for(unsigned i = 0; i < kAudioFrameSize; i++) {
-		frame[i] = ((16000 * (int)src[i]) + (16000 * (int)_buffer[_bufTail + i])) / 32768;
+		frame[i].l = ((16000 * (int)src[i].l) + (16000 * (int)_buffer[_bufTail + i].l)) / 32768;
+		frame[i].r = ((16000 * (int)src[i].r) + (16000 * (int)_buffer[_bufTail + i].r)) / 32768;
 	}
 
 	/*

@@ -308,10 +308,10 @@ uint32_t wm8994_Init(uint16_t DeviceAddr, uint16_t OutputInputDevice, uint8_t Vo
       counter += CODEC_IO_Write(DeviceAddr, 0x28, 0x0011);
 
       /* Disable mute on IN1L_TO_MIXINL and +30dB on IN1L PGA output */
-      counter += CODEC_IO_Write(DeviceAddr, 0x29, 0x0035);
+      counter += CODEC_IO_Write(DeviceAddr, 0x29, 0x0020 /*0x0035*/);
 
       /* Disable mute on IN1R_TO_MIXINL, Gain = +30dB */
-      counter += CODEC_IO_Write(DeviceAddr, 0x2A, 0x0035);
+      counter += CODEC_IO_Write(DeviceAddr, 0x2A, 0x0020 /*0x0035*/);
 
       /* Enable AIF1ADC1 (Left), Enable AIF1ADC1 (Right)
        * Enable Left ADC, Enable Right ADC */
@@ -615,15 +615,13 @@ uint32_t wm8994_Init(uint16_t DeviceAddr, uint16_t OutputInputDevice, uint8_t Vo
     {
 
       /* Disable mute on IN1L, IN1L Volume = +0dB */
-        //counter += CODEC_IO_Write(DeviceAddr, 0x18, 0x000B);
-        counter += CODEC_IO_Write(DeviceAddr, 0x18, 0x0003);
+      counter += CODEC_IO_Write(DeviceAddr, 0x18, 0x000B);
 
       /* Disable mute on IN1R, IN1R Volume = +0dB */
-        //counter += CODEC_IO_Write(DeviceAddr, 0x1A, 0x000B);
-        counter += CODEC_IO_Write(DeviceAddr, 0x1A, 0x0003);
+      counter += CODEC_IO_Write(DeviceAddr, 0x1A, 0x000B);
 
       /* AIF ADC1 HPF enable, HPF cut = hifi mode fc=4Hz at fs=48kHz */
-      counter += CODEC_IO_Write(DeviceAddr, 0x410, 0x8000 /*0x1800*/);
+      counter += CODEC_IO_Write(DeviceAddr, 0x410, 0x1800);
     }
     /* Volume Control */
     wm8994_SetVolume(DeviceAddr, Volume);
