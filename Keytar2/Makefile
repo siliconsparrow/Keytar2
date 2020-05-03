@@ -15,7 +15,8 @@ RELEASEPATH = Release
 LINKER_SCRIPT_RELEASE = STM32F746NGHx_FLASH.ld
 LINKER_SCRIPT_DEBUG = STM32F746NGHx_FLASH.ld
 
-TOOLPATH = /opt/gcc-arm-none-eabi-9-2019-q4-major/bin
+#TOOLPATH = /opt/gcc-arm-none-eabi-9-2019-q4-major/bin
+TOOLPATH = /usr/bin
 
 DEFINES  = -DSTM32F746xx
 

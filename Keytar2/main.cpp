@@ -134,7 +134,7 @@ int main()
     }
 #ifdef ENABLE_AUDIO
     // Init audio.
-    FilterLineIn mic(FilterLineIn::chanBoth);
+    FilterLineIn mic(FilterLineIn::chanLeft);
 
     //FilterLeftToStereo smic;
     //smic.setSource(&mic);
@@ -153,11 +153,11 @@ int main()
     //FilterReverbFir reverb;
     //reverb.setSource(&mic);
 
-    //FilterMixer mixer(2);
-    //mixer.setChannelSource(0, &reverb, FilterMixer::kMaxLevel / 16);
-    //mixer.setChannelSource(1, &wav, FilterMixer::kMaxLevel / 16);
+    FilterMixer mixer(2);
+    mixer.setChannelSource(0, &mic, FilterMixer::kMaxLevel / 2);
+    mixer.setChannelSource(1, &wav, FilterMixer::kMaxLevel / 16);
     if(Audio::kStatusOk == Audio::instance()->init()) {
-    	Audio::instance()->setFilterChain(&mic);
+    	Audio::instance()->setFilterChain(&mixer);
     	printf("Audio init OK\n");
     } else {
     	printf("Audio init failed!\n");

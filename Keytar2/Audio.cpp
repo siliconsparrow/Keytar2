@@ -170,7 +170,7 @@ int Audio::initCodec(uint16_t InputDevice, uint16_t OutputDevice, uint32_t Audio
     if (InputDevice == INPUT_DEVICE_DIGITAL_MICROPHONE_2) {
       slot_active = CODEC_AUDIOFRAME_SLOT_13;
     } else {
-      slot_active = CODEC_AUDIOFRAME_SLOT_0123;
+      slot_active = CODEC_AUDIOFRAME_SLOT_02; //CODEC_AUDIOFRAME_SLOT_0123;
     }
     SAIx_In_Init(SAI_MODEMASTER_TX, slot_active, AudioFreq);
 
@@ -192,10 +192,10 @@ int Audio::initCodec(uint16_t InputDevice, uint16_t OutputDevice, uint32_t Audio
     if(ret == AUDIO_OK)
     {
       /* Initialize the codec internal registers */
-    	uint8_t volume = 30; // 100;
+    	uint8_t volume = 80; // 100;
       audio_drv->Init(AUDIO_I2C_ADDRESS, InputDevice | OutputDevice, volume, AudioFreq);
 
-      audio_drv->SetVolume(AUDIO_I2C_ADDRESS, 90); // Volume ranges from 0 to 100.
+      audio_drv->SetVolume(AUDIO_I2C_ADDRESS, volume); // Volume ranges from 0 to 100.
     }
   return ret;
 }

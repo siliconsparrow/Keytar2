@@ -190,8 +190,9 @@ uint32_t wm8994_Init(uint16_t DeviceAddr, uint16_t OutputInputDevice, uint8_t Vo
       break;
 
     case OUTPUT_DEVICE_HEADPHONE:
-      /* Disable DAC1 (Left), Disable DAC1 (Right),
-      Enable DAC2 (Left), Enable DAC2 (Right)*/
+      /* Disable DAC2 (Left), Disable DAC2 (Right),
+      Enable DAC1 (Left), Enable DAC1 (Right)
+      Route from AIF1 timeslot 0*/
       counter += CODEC_IO_Write(DeviceAddr, 0x05, 0x0303);
 
       /* Enable the AIF1 Timeslot 0 (Left) to DAC 1 (Left) mixer path */
@@ -769,6 +770,7 @@ uint32_t wm8994_SetVolume(uint16_t DeviceAddr, uint8_t Volume)
 {
   uint32_t counter = 0;
   uint8_t convertedvol = VOLUME_CONVERT(Volume);
+  uint8_t inpVolume = 100;
 
   /* Output volume */
   if (outputEnabled != 0)
@@ -817,7 +819,7 @@ uint32_t wm8994_SetVolume(uint16_t DeviceAddr, uint8_t Volume)
   /* Input volume */
   if (inputEnabled != 0)
   {
-    convertedvol = VOLUME_IN_CONVERT(Volume);
+    convertedvol = VOLUME_IN_CONVERT(inpVolume);
 
     /* Left AIF1 ADC1 volume */
     counter += CODEC_IO_Write(DeviceAddr, 0x400, convertedvol | 0x100);
