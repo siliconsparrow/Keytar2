@@ -73,6 +73,7 @@ SOURCES = \
 	FilterVocoder.cpp \
 	FilterReverbFir.cpp \
 	FilterFluidSynth.cpp \
+	FilterDrumKit.cpp \
 	WavFile.cpp \
 	AudioFormat.cpp \
 	Gui.cpp \

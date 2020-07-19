@@ -39,6 +39,7 @@
 #include "FilterVocoder.h"
 #include "FilterWavStream.h"
 #include "FilterFluidSynth.h"
+#include "FilterDrumKit.h"
 #include "usbd_conf.h"
 #include "PerfMon.h"
 #include "PerfMeter.h"
@@ -56,13 +57,17 @@
 // #define WAV_TEST_FILENAME "/Minimal Heaven vol. 1/LS-MH1 Laser Sweep 10.wav"
 #define WAV_TEST_FILENAME "/Large FX Collection/LS LFXC Short-Sound 022.wav"
 
-FilterSample *g_wavTest = 0;
+//FilterSample *g_wavTest = 0;
+FilterDrumKit *g_drums = 0;
 
 void fnPlayWav(unsigned tag)
 {
-	if(g_wavTest != 0) {
-		g_wavTest->play();
+	if(g_drums != 0) {
+		g_drums->trigger(FilterDrumKit::snare);
 	}
+//	if(g_wavTest != 0) {
+//		g_wavTest->play();
+//	}
 }
 
 FilterFluidSynth *g_synth = 0;
@@ -172,13 +177,18 @@ int main()
     //FilterWavStream wav;
 
     // Set up a sound-effect.
-    FilterSample wav;
-    if(wav.load(WAV_TEST_FILENAME)) {
-    	printf("WAV loaded OK.\n");
-    } else {
-    	fprintf(stderr, "Failed to load WAV file!\n");
-    }
-    g_wavTest = &wav;
+//    FilterSample wav;
+//    if(wav.load(WAV_TEST_FILENAME)) {
+//    	printf("WAV loaded OK.\n");
+//    } else {
+//    	fprintf(stderr, "Failed to load WAV file!\n");
+//    }
+//    g_wavTest = &wav;
+
+    // Drum kit
+    FilterDrumKit drums;
+    drums.load("/Drums909");
+    g_drums = &drums;
 
     // Test of my simple reverb effect.
     //FilterReverbFir reverb;
@@ -191,7 +201,8 @@ int main()
     // Final mixdown before the sound is output.
     FilterMixer mixer(3);
     mixer.setChannelSource(0, &mic, FilterMixer::kMaxLevel / 2);
-    mixer.setChannelSource(1, &wav, FilterMixer::kMaxLevel / 16);
+    //mixer.setChannelSource(1, &wav, FilterMixer::kMaxLevel / 16);
+    mixer.setChannelSource(1, &drums, FilterMixer::kMaxLevel / 2);
     mixer.setChannelSource(2, &synth, FilterMixer::kMaxLevel / 2);
 
     // Init audio streaming.
