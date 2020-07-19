@@ -160,6 +160,7 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
   DRESULT res = RES_ERROR;
 
 #ifdef USE_DMA
+  SCB_CleanInvalidateDCache(); // DMA will write directly to RAM which can confuse the data cache, so let's reset the cache.
   if(BSP_SD_ReadBlocks_DMA((uint32_t*)buff,
                        (uint32_t) (sector),
                        count) == MSD_OK)
@@ -204,6 +205,7 @@ DRESULT SD_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
   DRESULT res = RES_ERROR;
 
 #ifdef USE_DMA
+  SCB_CleanInvalidateDCache(); // DMA will write directly to RAM which can confuse the data cache, so let's reset the cache.
   if(BSP_SD_WriteBlocks_DMA((uint32_t*)buff,
                         (uint32_t)(sector),
                         count) == MSD_OK)

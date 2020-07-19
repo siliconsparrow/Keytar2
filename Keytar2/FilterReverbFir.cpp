@@ -46,6 +46,7 @@ unsigned FilterReverbFir::getOffset(unsigned offset) const
 
 void FilterReverbFir::fillFrame(StereoSample *frame)
 {
+#if 0
 	// Get a frame from our source.
 	StereoSample src[kAudioFrameSize];
 	_source->fillFrame(src);
@@ -62,10 +63,10 @@ void FilterReverbFir::fillFrame(StereoSample *frame)
 		frame[i].l = ((16000 * (int)src[i].l) + (16000 * (int)_buffer[_bufTail + i].l)) / 32768;
 		frame[i].r = ((16000 * (int)src[i].r) + (16000 * (int)_buffer[_bufTail + i].r)) / 32768;
 	}
+#endif // 0
 
-	/*
 	// Get a frame from our source.
-	Sample src[kAudioFrameSize];
+	StereoSample src[kAudioFrameSize];
 	_source->fillFrame(src);
 
 	// Create echoes into the buffer using taps.
@@ -75,10 +76,11 @@ void FilterReverbFir::fillFrame(StereoSample *frame)
 		unsigned offset = getOffset(_tap[tap].offset);
 		int amp = ((32768 - decay) * _tap[tap].amp) / 32768;
 		for(unsigned i = 0; i < kAudioFrameSize; i++) {
-			Sample *b = &_buffer[offset++];
+			StereoSample *b = &_buffer[offset++];
 			if(offset >= kBufSize)
 				offset = 0;
-			*b = ((amp * (int)*b) + (32768 * (int)src[i])) / 32768;
+			b->l = ((amp * (int)b->l) + (32768 * (int)src[i].l)) / 32768;
+			b->r = ((amp * (int)b->r) + (32768 * (int)src[i].r)) / 32768;
 		}
 	}
 
@@ -86,9 +88,10 @@ void FilterReverbFir::fillFrame(StereoSample *frame)
 	int wet = 16384;
 	int dry = 32768 - wet;
 	for(unsigned i = 0; i < kAudioFrameSize; i++) {
-		frame[i] = ((dry * (int)src[i]) + (wet * (int)_buffer[_bufHead++])) / 32768;
+		frame[i].l = ((dry * (int)src[i].l) + (wet * (int)_buffer[_bufHead].l)) / 32768;
+		frame[i].r = ((dry * (int)src[i].r) + (wet * (int)_buffer[_bufHead].r)) / 32768;
+		_bufHead++;
 		if(_bufHead >= kBufSize)
 			_bufHead = 0;
 	}
-	*/
 }

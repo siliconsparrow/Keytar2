@@ -2,32 +2,6 @@
 #include <unistd.h>
 #include "Gui.h"
 
-extern "C" {
-	extern char _heap_start; // set by linker
-	extern char _heap_end;   // set by linker
-}
-
-// Expand the heap. Usually called by malloc or new.
-extern "C" void *_sbrk(int incr)
-{
-
-	static char *heap_end; // Previous end of heap or 0 if none
-	char        *prev_heap_end;
-
-	if(0 == heap_end) {
-		heap_end = &_heap_start; // First time init.
-	}
-
-	prev_heap_end  = heap_end;
-	heap_end      += incr;
-	if( heap_end > (&_heap_end)) {
-		errno = ENOMEM;
-		return (char*)-1;
-	}
-
-	return (void *)prev_heap_end;
-}
-
 // write to disc or console.
 extern "C" int _write(int fd, char *ptr, int len)
 {

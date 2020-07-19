@@ -17,7 +17,7 @@ public:
 
 	void setSource(AudioFilter *filter) { _src = filter; }
 
-	virtual void fillFrame(Sample *frame);
+	virtual void fillFrame(StereoSample *frame);
 
 private:
 	AudioFilter *_src;

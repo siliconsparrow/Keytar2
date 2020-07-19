@@ -10,6 +10,7 @@
 TARGET = Keytar2
 
 SDK_PATH = STM32Cube_FW_F7_V1.16.0
+FLUID_PATH = fluidsynth
 DEBUGPATH = Debug
 RELEASEPATH = Release
 LINKER_SCRIPT_RELEASE = STM32F746NGHx_FLASH.ld
@@ -18,7 +19,7 @@ LINKER_SCRIPT_DEBUG = STM32F746NGHx_FLASH.ld
 #TOOLPATH = /opt/gcc-arm-none-eabi-9-2019-q4-major/bin
 TOOLPATH = /usr/bin
 
-DEFINES  = -DSTM32F746xx
+DEFINES  = -DSTM32F746xx -DARM_MATH_CM7
 
 # List of all source files to compile.
 SOURCES = \
@@ -46,6 +47,7 @@ SOURCES = \
 	stm32f7xx_it.c \
 	stm32746g_discovery_sd.c \
 	platform.cpp \
+	chipAlloc.c \
 	usbd_conf.c \
 	usbd_core.c \
 	usbd_desc.c \
@@ -70,6 +72,7 @@ SOURCES = \
 	FilterSample.cpp \
 	FilterVocoder.cpp \
 	FilterReverbFir.cpp \
+	FilterFluidSynth.cpp \
 	WavFile.cpp \
 	AudioFormat.cpp \
 	Gui.cpp \
@@ -85,13 +88,25 @@ SOURCES = \
 	syscalls.cpp \
 	tinycpp.cpp \
 	PerfMon.c \
+	UTimer.c \
+	arm_sin_f32.c \
+	arm_cos_f32.c \
+	arm_common_tables.c \
+	fluid_settings.c \
+	fluid_synth.c \
+	fluid_list.c \
+	fluid_hash.c \
+	fluid_sys.c \
+	fluid_conv.c \
+	fluid_voice.c \
+	fluid_mod.c \
+	fluid_defsfont.c \
+	fluid_chan.c \
+	fluid_rev.c \
+	fluid_chorus.c \
+	fluid_gen.c \
+	ff_wrapper.c \
 	main.cpp
-
-
-	
-#	$(wildcard *.c) \
-#	$(wildcard *.cpp) \
-
 
 # Directories in which we might find sources and dependencies.
 VPATH = . \
@@ -99,23 +114,27 @@ VPATH = . \
 	$(SDK_PATH)/Drivers/BSP/STM32746G-Discovery \
 	$(SDK_PATH)/Drivers/BSP/Components/ft5336 \
 	$(SDK_PATH)/Drivers/BSP/Components/wm8994 \
+	$(SDK_PATH)/Drivers/CMSIS/DSP/Source/FastMathFunctions \
+	$(SDK_PATH)/Drivers/CMSIS/DSP/Source/CommonTables \
 	$(SDK_PATH)/Middlewares/Third_Party/FatFs/src \
 	$(SDK_PATH)/Middlewares/Third_Party/FatFs/src/option \
 	$(SDK_PATH)/Middlewares/ST/STM32_USB_Device_Library/Core/Src \
-	$(SDK_PATH)/Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Src
+	$(SDK_PATH)/Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Src \
+	lfluidsynth/src
 	
 # Include paths
 INCLUDES = -I. \
 	-I$(SDK_PATH)/Drivers/CMSIS/Device/ST/STM32F7xx/Include \
 	-I$(SDK_PATH)/Drivers/CMSIS/Include \
+	-I$(SDK_PATH)/Drivers/CMSIS/DSP/Include \
 	-I$(SDK_PATH)/Drivers/STM32F7xx_HAL_Driver/Inc \
 	-I$(SDK_PATH)/Drivers/BSP/STM32746G-Discovery \
 	-I$(SDK_PATH)/Drivers/BSP/Components/ft5336 \
 	-I$(SDK_PATH)/Drivers/BSP/Components/wm8994 \
 	-I$(SDK_PATH)/Middlewares/Third_Party/FatFs/src \
 	-I$(SDK_PATH)/Middlewares/ST/STM32_USB_Device_Library/Core/Inc \
-	-I$(SDK_PATH)/Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Inc
-	
+	-I$(SDK_PATH)/Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Inc \
+	-Ilfluidsynth/src
 
 # Additional libraries.
 LIBS =
@@ -126,7 +145,8 @@ COMMONFLAGS = -fmessage-length=0 -specs=nano.specs -mthumb -mcpu=cortex-m7 -fsho
 
 
 # Debug and optimization flags.
-DEBUGFLAGS = -D__DEBUG -g -O0
+#DEBUGFLAGS = -D__DEBUG -g -O0
+DEBUGFLAGS = -g -O3
 RELEASEFLAGS = -O3 -g0
 
 # Additional compiler flags for C

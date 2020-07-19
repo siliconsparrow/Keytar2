@@ -7,6 +7,7 @@
 
 #include "FilterSample.h"
 #include "WavFile.h"
+#include "chipAlloc.h"
 #include <malloc.h>
 #include <string.h>
 
@@ -21,6 +22,7 @@ FilterSample::FilterSample()
 FilterSample::~FilterSample()
 {
 	free(_buf);
+	//freeSDRam(_buf);
 }
 
 bool FilterSample::load(const TCHAR *wavFileName)
@@ -32,7 +34,8 @@ bool FilterSample::load(const TCHAR *wavFileName)
 	}
 
 	_bufCount = wf.getByteSize();
-	_buf = (StereoSample *)0xC0080000; //malloc(_bufCount); // Must be in SDRAM because internal RAM is not big enough.
+	//_buf = (StereoSample *)allocSDRam(_bufCount); //malloc(_bufCount); // Must be in SDRAM because internal RAM is not big enough.
+	_buf = (StereoSample *)malloc(_bufCount);
 	if(_buf == 0) {
 		return false;
 	}

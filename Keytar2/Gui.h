@@ -105,6 +105,8 @@ namespace Gui
 		int         getWidth()  const { return _r.getWidth(); }
 		int         getHeight() const { return _r.getHeight(); }
 
+		PIXEL *getFrameBuffer() const;
+
 	private:
 		const Rect _r;
 		Font       _f;
@@ -176,7 +178,7 @@ namespace Gui
 		: public Obj
 	{
 	public:
-		Button(const Rect &pos, const char *label, void (onClick)());
+		Button(const Rect &pos, const char *label, void (*onClick)(unsigned), void (*onRelease)(unsigned) = 0, unsigned tag = 0);
 		virtual ~Button() { }
 
 		virtual void onTouch(int x, int y);
@@ -185,7 +187,9 @@ namespace Gui
 
 	private:
 		const char  *_label;
-		void       (*_onClick)();
+		void       (*_onClick)(unsigned);
+		void       (*_onRelease)(unsigned);
+		unsigned     _tag;
 		bool         _pressed;
 	};
 
@@ -255,6 +259,8 @@ namespace Gui
 
 		void redrawAll();
 
+		PIXEL *getFrameBuffer() const { return _frameBuffer; }
+
 	private:
 		enum {
 			kLcdWidth = 480,
@@ -263,6 +269,7 @@ namespace Gui
 			kBlinkTimeMs = 500
 		};
 
+		PIXEL      *_frameBuffer;
 		Rect        _screen;
 		TextWindow  _console;
 		unsigned    _nObj;

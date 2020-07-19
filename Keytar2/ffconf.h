@@ -83,11 +83,11 @@
 /  f_findnext(). (0:Disable, 1:Enable 2:Enable with matching altname[] too) */
 
 
-#define	_USE_MKFS		1
+#define	_USE_MKFS		0
 /* This option switches f_mkfs() function. (0:Disable or 1:Enable) */
 
 
-#define	_USE_FASTSEEK	1
+#define	_USE_FASTSEEK	0
 /* This option switches fast seek function. (0:Disable or 1:Enable) */
 
 
@@ -178,7 +178,7 @@
 /  This option has no effect when _LFN_UNICODE == 0. */
 
 
-#define _FS_RPATH	0
+#define _FS_RPATH	1
 /* This option configures support of relative path.
 /
 /   0: Disable relative path and remove related functions.

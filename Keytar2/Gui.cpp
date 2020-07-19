@@ -9,6 +9,7 @@
 #include "stm32746g_discovery_ts.h"  // Touch screen
 #include "stm32746g_discovery_lcd.h" // LCD
 #include "PerfMon.h"
+#include "chipAlloc.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -142,6 +143,11 @@ namespace Gui
 		BSP_LCD_SetTextColor(_fg);
 	}
 
+	PIXEL *Gfx::getFrameBuffer() const
+	{
+		return Gui::instance()->getFrameBuffer();
+	}
+
 
 	// *******************************************
 	// ** Base class for all GUI objects.
@@ -183,10 +189,12 @@ namespace Gui
 	// *******************************************
 	// ** Simple pressy button.
 
-	Button::Button(const Rect &pos, const char *label, void (onClick)())
+	Button::Button(const Rect &pos, const char *label, void (*onClick)(unsigned), void (*onRelease)(unsigned), unsigned tag)
 		: Obj(pos)
 		, _label(label)
 		, _onClick(onClick)
+		, _onRelease(onRelease)
+		, _tag(tag)
 		, _pressed(false)
 	{
 	}
@@ -196,13 +204,19 @@ namespace Gui
 		_pressed = true;
 		dirty();
 
-		_onClick();
+		if(_onClick != 0) {
+			_onClick(_tag);
+		}
 	}
 
 	void Button::onRelease()
 	{
 		_pressed = false;
 		dirty();
+
+		if(_onRelease != 0) {
+			_onRelease(_tag);
+		}
 	}
 
 	void Button::draw(Gfx &gfx)
@@ -302,7 +316,7 @@ namespace Gui
 	void TextWindow::scroll(Gfx &gfx, int y)
 	{
 		// Calculate buffer start position.
-		uint8_t *buf = (uint8_t *)LCD_FB_START_ADDRESS
+		uint8_t *buf = (uint8_t *)gfx.getFrameBuffer()
 				     + (sizeof(PIXEL) * gfx.getRect().getX())
 					 + (sizeof(PIXEL) * BSP_LCD_GetXSize() * gfx.getRect().getY());
 
@@ -350,7 +364,8 @@ namespace Gui
 	// ** Manage screen and UI events.
 
 	Gui::Gui()
-		: _screen(0, 0, kLcdWidth, kLcdHeight)
+		: _frameBuffer((PIXEL*)0xC0000000)
+		, _screen(0, 0, kLcdWidth, kLcdHeight)
 		, _console(Rect(0, 128, 480, 144)) // Set up a console.
 		, _nObj(0)
 		, _touch(false)
@@ -361,8 +376,10 @@ namespace Gui
 		g_gui = this;
 
 		// Initialize the LCD.
+		//_frameBuffer = (PIXEL *)allocSDRam(kLcdWidth * kLcdHeight * sizeof(PIXEL));
+		//_frameBuffer = (PIXEL *)FRAMEBUFFER_ADDR;
 		BSP_LCD_Init();
-		BSP_LCD_LayerDefaultInit(0, LCD_FB_START_ADDRESS);
+		BSP_LCD_LayerDefaultInit(0, (uint32_t)_frameBuffer);
 		BSP_LCD_SelectLayer(0);
 		BSP_LCD_DisplayOn();
 

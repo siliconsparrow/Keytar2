@@ -38,11 +38,16 @@
 #include "FilterReverbFir.h"
 #include "FilterVocoder.h"
 #include "FilterWavStream.h"
+#include "FilterFluidSynth.h"
 #include "usbd_conf.h"
 #include "PerfMon.h"
 #include "PerfMeter.h"
+#include "UTimer.h"
 #include <stdio.h>
 #include "main.h"
+
+// TEST
+#include "ff_wrapper.h"
 
 // Audio uses a lot of interrupts pretty heavily so if I want
 // to debug something else, it is handy to turn it off temporarily.
@@ -53,12 +58,57 @@
 
 FilterSample *g_wavTest = 0;
 
-void fnPlayWav()
+void fnPlayWav(unsigned tag)
 {
 	if(g_wavTest != 0) {
 		g_wavTest->play();
 	}
 }
+
+FilterFluidSynth *g_synth = 0;
+
+void fnKbPress(unsigned tag)
+{
+	if(g_synth != 0) {
+		g_synth->noteOn(tag, 127);
+	}
+}
+
+void fnKbRelease(unsigned tag)
+{
+	if(g_synth != 0) {
+		g_synth->noteOff(tag);
+	}
+}
+
+const char *PATCHFILE[] = {
+	"/Soundfonts/Kaputt Sine.sf2",
+	"/Soundfonts/Analog Saw.sf2",
+	"/Soundfonts/Happy Mellow.sf2",
+	"/Soundfonts/Dirty Sub.sf2",
+	"/Soundfonts/FM Modulator.sf2",
+	"/Soundfonts/Acid SQ Neutral.sf2",
+	"/Soundfonts/Beeper.sf2",
+	"/Soundfonts/Perfect Sine.sf2",
+	"/Soundfonts/Synth E.sf2",
+	"/Soundfonts/Sine Wave.sf2",
+	"/Soundfonts/Solar Wind.sf2",
+	"/Soundfonts/Dance Trance.sf2",
+	"/Soundfonts/Candy Bee.sf2",
+	"/Soundfonts/Poly Special Mono.sf2",
+	"/Soundfonts/Hyper Saw.sf2",
+	"/Soundfonts/Super Saw 3.sf2",
+	"/Soundfonts/Super Saw 1.sf2",
+	"/Soundfonts/Super Saw 2.sf2",
+	"/Soundfonts/Pulse Wobbler.sf2",
+	0
+};
+
+void fnPatch(unsigned tag)
+{
+	g_synth->replaceSF(PATCHFILE[tag]);
+}
+
 
 // The SD card cannot safely be used by the USB and the audio
 // system at the same time. This must be called every now and
@@ -82,29 +132,6 @@ extern "C" void sdCardToUsb()
 	FileSystem::instance()->suspend();
 }
 
-// Quickie to take left-channel data and copy it to the right channel
-// so I get both channels playing microphone data.
-//class FilterLeftToStereo : public AudioFilter
-//{
-//public:
-//	FilterLeftToStereo() : _source(0) { }
-//	virtual ~FilterLeftToStereo() { }
-//
-//	void setSource(AudioFilter *src) { _source = src; }
-//
-//	virtual void fillFrame(Sample *frame)
-//	{
-//		_source->fillFrame(frame);
-//		StereoSample *ss = (StereoSample *)frame;
-//		for(int i = 0; i < kAudioFrameSize / 2; i++) {
-//			ss[i].r = ss[i].l;
-//		}
-//	}
-//
-//private:
-//	AudioFilter *_source;
-//};
-
 int main()
 {
     MPU_Config();       // Configure CPU
@@ -119,10 +146,13 @@ int main()
     HAL_Init();
     SystemClock_Config(); // Set a faster core speed (216MHz)
 
+    uTimerInit();
+
     perfInit();
 
     // Set up screen and text rendering.
-    Gui::Gui *gui = new Gui::Gui();
+    Gui::Gui sGui;
+    Gui::Gui *gui = &sGui; //new Gui::Gui();
     printf(">> Disco Board Audio Test <<\n\n");
 
     // Start up USB Mass storage device to access the SD card.
@@ -133,15 +163,15 @@ int main()
     	printf("USB init failed!\n");
     }
 #ifdef ENABLE_AUDIO
-    // Init audio.
-    FilterLineIn mic(FilterLineIn::chanLeft);
 
-    //FilterLeftToStereo smic;
-    //smic.setSource(&mic);
+    // Set up microphone input.
+    FilterLineIn mic(FilterLineIn::chanLeft);
 
     //FilterVocoder vocoder;
     //vocoder.setSource(&smic);
     //FilterWavStream wav;
+
+    // Set up a sound-effect.
     FilterSample wav;
     if(wav.load(WAV_TEST_FILENAME)) {
     	printf("WAV loaded OK.\n");
@@ -150,12 +180,21 @@ int main()
     }
     g_wavTest = &wav;
 
+    // Test of my simple reverb effect.
     //FilterReverbFir reverb;
     //reverb.setSource(&mic);
 
-    FilterMixer mixer(2);
+    // Set up fluid synth.
+    FilterFluidSynth synth;
+    g_synth = &synth;
+
+    // Final mixdown before the sound is output.
+    FilterMixer mixer(3);
     mixer.setChannelSource(0, &mic, FilterMixer::kMaxLevel / 2);
     mixer.setChannelSource(1, &wav, FilterMixer::kMaxLevel / 16);
+    mixer.setChannelSource(2, &synth, FilterMixer::kMaxLevel / 2);
+
+    // Init audio streaming.
     if(Audio::kStatusOk == Audio::instance()->init()) {
     	Audio::instance()->setFilterChain(&mixer);
     	printf("Audio init OK\n");
@@ -179,6 +218,27 @@ int main()
     }
 #endif // ENABLE_AUDIO
 
+    // Keyboard
+    const unsigned NOTENUM[] = { 60, 62, 64, 65, 67, 69, 71, 72 };
+    const char *KEYNAME[] = { "C","D","E","F","G","A","B","C" };
+    for(int i = 0, x = 0; i < 8; i++) {
+    	gui->add(new Gui::Button(Gui::Rect(x, 66, 55, 50), KEYNAME[i], &fnKbPress, &fnKbRelease, NOTENUM[i]));
+    	x += 60;
+    }
+
+    // Patch select
+    int x = 170;
+    const char *NUM[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0" };
+    for(int i = 0; i < 8; i++) {
+    	char buf[2];
+    	buf[0] = '1' + i;
+    	buf[1] = 0;
+    	gui->add(new Gui::Button(Gui::Rect(x, 10, 25, 30), NUM[i], 0, &fnPatch, i));
+    	x += 28;
+    }
+
+
+
     uint32_t _tLastPerfUpdate = 0;
 
     FileSystem::instance(); // Mount the file system.
@@ -187,13 +247,15 @@ int main()
 //    Gui::Label _lblUSB(Gui::Rect(180, 30, 100, 16), "");
 //    gui->add(&_lblUSB);
 
-//    printFile("/licence.txt");
+
+    // TEST: print out a text file from the SD card.
+    //    printFile("/licence.txt");
 
     // Main loop
     while(1)
     {
+    	// Check for touch events and update GUI objects on-screen.
     	gui->tick();
-
 
 		// There doesn't seem to be any kind of USB disconnect event
 		// so I have to poll for USB disconnect.

@@ -33,12 +33,13 @@
 ENTRY(Reset_Handler)
 
 /* Highest address of the user mode stack */
-_estack = 0x20050000;    /* end of RAM */
+_estack   = 0x20050000;  /* end of RAM */
+_heap_end = 0x2004C000;  /* End of heap, bottom of stack. 16k allocated to stack. */
+
 /* Generate a link error if heap and stack don't fit into RAM */
-_Min_Heap_Size = 0x200;      /* required amount of heap  */
+_Min_Heap_Size  = 0x200; /* required amount of heap  */
 _Min_Stack_Size = 0x400; /* required amount of stack */
 
-_heap_end = 0x20040000;
 
 /* Specify the memory areas */
 MEMORY
@@ -173,5 +174,3 @@ SECTIONS
 
   .ARM.attributes 0 : { *(.ARM.attributes) }
 }
-
-

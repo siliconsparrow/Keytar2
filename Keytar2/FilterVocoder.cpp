@@ -12,9 +12,9 @@ FilterVocoder::FilterVocoder()
 {
 }
 
-void FilterVocoder::fillFrame(Sample *frame)
+void FilterVocoder::fillFrame(StereoSample *frame)
 {
-	Sample buf[kAudioFrameSize];
+	StereoSample buf[kAudioFrameSize];
 
 	_src->fillFrame(buf);
 
