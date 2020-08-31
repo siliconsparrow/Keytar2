@@ -16,7 +16,7 @@ PerfMeter::PerfMeter(Gui::Gui *gui, int x, int y)
     	gui->add(_lblPerf[i]);
     }
 
-    Systick::instance()->add(this, 10);
+    Systick::instance()->add(this, 50);
 }
 
 void PerfMeter::evtTick()

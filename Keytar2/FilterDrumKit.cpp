@@ -48,8 +48,17 @@ bool FilterDrumKit::load(const char *path)
 
 	return true;
 }
-	
-void FilterDrumKit::trigger(DRUM drum)
+
+void FilterDrumKit::midi(MidiMessage msg)
 {
-	_drum[drum].play();
+	// We only support the NOTE ON command.
+	if(MidiMessage::NOTE_ON == msg.message()) {
+		uint8_t note = msg.param1();
+		if(note >= MidiMessage::C4) {
+			note -= MidiMessage::C4;
+			if(note < kNumDrums) {
+				_drum[note].play();
+			}
+		}
+	}
 }

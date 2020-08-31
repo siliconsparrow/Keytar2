@@ -58,17 +58,19 @@
 #define WAV_TEST_FILENAME "/Large FX Collection/LS LFXC Short-Sound 022.wav"
 
 //FilterSample *g_wavTest = 0;
-FilterDrumKit *g_drums = 0;
+//FilterDrumKit *g_drums = 0;
 
-void fnPlayWav(unsigned tag)
-{
-	if(g_drums != 0) {
-		g_drums->trigger(FilterDrumKit::snare);
-	}
-//	if(g_wavTest != 0) {
-//		g_wavTest->play();
+//void fnPlayWav(unsigned tag)
+//{
+//	if(g_drums != 0) {
+//		g_drums->midi(MidiMessage(MidiMessage::NOTE_ON,
+//				                  MidiMessage::kDrumtrackChannel,
+//								  (uint8_t)MidiMessage::C4 + (uint8_t)FilterDrumKit::snare));
 //	}
-}
+////	if(g_wavTest != 0) {
+////		g_wavTest->play();
+////	}
+//}
 
 FilterFluidSynth *g_synth = 0;
 
@@ -157,7 +159,7 @@ int main()
 
     // Set up screen and text rendering.
     Gui::Gui sGui;
-    Gui::Gui *gui = &sGui; //new Gui::Gui();
+    Gui::Gui *gui = &sGui;
     printf(">> Disco Board Audio Test <<\n\n");
 
     // Start up USB Mass storage device to access the SD card.
@@ -167,43 +169,27 @@ int main()
     } else {
     	printf("USB init failed!\n");
     }
+
+    FileSystem::instance(); // Mount the file system.
+
 #ifdef ENABLE_AUDIO
 
     // Set up microphone input.
     FilterLineIn mic(FilterLineIn::chanLeft);
 
-    //FilterVocoder vocoder;
-    //vocoder.setSource(&smic);
-    //FilterWavStream wav;
-
-    // Set up a sound-effect.
-//    FilterSample wav;
-//    if(wav.load(WAV_TEST_FILENAME)) {
-//    	printf("WAV loaded OK.\n");
-//    } else {
-//    	fprintf(stderr, "Failed to load WAV file!\n");
-//    }
-//    g_wavTest = &wav;
-
-    // Drum kit
-    FilterDrumKit drums;
-    drums.load("/Drums909");
-    g_drums = &drums;
-
-    // Test of my simple reverb effect.
-    //FilterReverbFir reverb;
-    //reverb.setSource(&mic);
+    // Drum kit (we'll use fluid synth for that now)
+//    FilterDrumKit drums;
+//    drums.load("/Drums909");
+//    g_drums = &drums;
 
     // Set up fluid synth.
     FilterFluidSynth synth;
     g_synth = &synth;
 
     // Final mixdown before the sound is output.
-    FilterMixer mixer(3);
+    FilterMixer mixer(2);
     mixer.setChannelSource(0, &mic, FilterMixer::kMaxLevel / 2);
-    //mixer.setChannelSource(1, &wav, FilterMixer::kMaxLevel / 16);
-    mixer.setChannelSource(1, &drums, FilterMixer::kMaxLevel / 2);
-    mixer.setChannelSource(2, &synth, FilterMixer::kMaxLevel / 2);
+    mixer.setChannelSource(1, &synth, FilterMixer::kMaxLevel / 2);
 
     // Init audio streaming.
     if(Audio::kStatusOk == Audio::instance()->init()) {
@@ -215,11 +201,9 @@ int main()
 #endif // ENABLE_AUDIO
 
     // Set up on-screen controls.
-    Gui::Button btnWav(Gui::Rect(10, 10, 146, 30), "PLAY WAV", &fnPlayWav);
+    //Gui::Button btnWav(Gui::Rect(10, 10, 146, 30), "PLAY WAV", &fnPlayWav);
     PerfMeter perf(gui, 480 - PerfMeter::kWidth, 0);
-    //Gui::Meter meterAudio(Gui::Rect(180, 10, 256, 30));
-    gui->add(&btnWav);
-    //gui->add(&meterAudio);
+    //gui->add(&btnWav);
 
 #ifdef ENABLE_AUDIO
     if(Audio::kStatusOk == Audio::instance()->start()) {
@@ -248,19 +232,7 @@ int main()
     	x += 28;
     }
 
-
-
     uint32_t _tLastPerfUpdate = 0;
-
-    FileSystem::instance(); // Mount the file system.
-
-//    bool _usbConnected = false;
-//    Gui::Label _lblUSB(Gui::Rect(180, 30, 100, 16), "");
-//    gui->add(&_lblUSB);
-
-
-    // TEST: print out a text file from the SD card.
-    //    printFile("/licence.txt");
 
     // Main loop
     while(1)

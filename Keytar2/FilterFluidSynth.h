@@ -9,6 +9,7 @@
 #define FILTERFLUIDSYNTH_H_
 
 #include "AudioFilter.h"
+#include "platform.h"
 #include "lfluidsynth.h"
 
 class FilterFluidSynth: public AudioFilter {

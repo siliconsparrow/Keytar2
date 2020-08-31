@@ -8,6 +8,7 @@
 #ifndef AUDIOFILTER_H_
 #define AUDIOFILTER_H_
 
+#include "MidiMessage.h"
 #include <stdint.h>
 
 // This type is used to store audio samples.
@@ -49,6 +50,7 @@ public:
 	virtual ~AudioFilter() { }
 
 	virtual void fillFrame(StereoSample *frame) = 0;
+	virtual void midi(MidiMessage msg) { }
 };
 
 #endif /* AUDIOFILTER_H_ */

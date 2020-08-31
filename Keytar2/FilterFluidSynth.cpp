@@ -8,8 +8,8 @@
 #include "FilterFluidSynth.h"
 #include "fluid_log.h"
 
-#define POLYPHONY 8 //64
-#define SOUNDFONT_FILE "/main.sf2"
+#define POLYPHONY      16 // 64
+#define SOUNDFONT_FILE "/FPD98.SF2"
 
 void fluidLog(int level, char* message, void* data)
 {

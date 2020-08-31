@@ -36,7 +36,9 @@ public:
 
 	bool load(const char *path);
 
-	void trigger(DRUM drum);
+	virtual void midi(MidiMessage msg);
+
+//	void trigger(DRUM drum);
 
 private:
 	FilterSample _drum[kNumDrums];

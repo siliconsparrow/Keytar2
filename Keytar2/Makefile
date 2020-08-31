@@ -19,7 +19,12 @@ LINKER_SCRIPT_DEBUG = STM32F746NGHx_FLASH.ld
 #TOOLPATH = /opt/gcc-arm-none-eabi-9-2019-q4-major/bin
 TOOLPATH = /usr/bin
 
-DEFINES  = -DSTM32F746xx -DARM_MATH_CM7
+DEFINES  = -DSTM32F746xx -DARM_MATH_CM7 -D__FPU_PRESENT=1
+
+# lfluidsynth defines. Not sure if any of these are useful or not.
+#COMMONFLAGS += -D_GNU_SOURCE -DFLUID_CALC_FORMAT_FLOAT -DFLUID_NEW_GEN_API -DFLUID_NO_NAMES -DFLUID_ALTSFONT
+#COMMONFLAGS += -DFLUID_SAMPLE_MMAP -DFLUID_NEW_VOICE_MOD_API -DFLUID_NEW_VOICE_GEN_API -DFLUID_NO_NRPN_EXT
+#COMMONFLAGS += -DFLUID_SIMPLE_IIR -DFLUID_AVX_OPT
 
 # List of all source files to compile.
 SOURCES = \
@@ -69,12 +74,7 @@ SOURCES = \
 	Audio.cpp \
 	FilterWavStream.cpp \
 	FilterMixer.cpp \
-	FilterSample.cpp \
-	FilterVocoder.cpp \
-	FilterReverbFir.cpp \
 	FilterFluidSynth.cpp \
-	FilterDrumKit.cpp \
-	WavFile.cpp \
 	AudioFormat.cpp \
 	Gui.cpp \
 	PerfMeter.cpp \
@@ -109,6 +109,12 @@ SOURCES = \
 	ff_wrapper.c \
 	main.cpp
 
+#	FilterSample.cpp \
+	FilterVocoder.cpp \
+	FilterReverbFir.cpp \
+	FilterDrumKit.cpp \
+	WavFile.cpp \
+
 # Directories in which we might find sources and dependencies.
 VPATH = . \
 	$(SDK_PATH)/Drivers/STM32F7xx_HAL_Driver/Src \
@@ -141,8 +147,31 @@ INCLUDES = -I. \
 LIBS =
 
 # Compiler flags for both C and C++.
-#COMMONFLAGS = -fmessage-length=0 -specs=nosys.specs -mthumb -mcpu=cortex-m7 -fshort-wchar -fomit-frame-pointer -ffunction-sections -fdata-sections
-COMMONFLAGS = -fmessage-length=0 -specs=nano.specs -mthumb -mcpu=cortex-m7 -fshort-wchar -fomit-frame-pointer -ffunction-sections -fdata-sections
+COMMONFLAGS  = -fmessage-length=0 -specs=nano.specs -mthumb -mcpu=cortex-m7 -fshort-wchar -fomit-frame-pointer -ffunction-sections -fdata-sections
+COMMONFLAGS += -mfloat-abi=hard -mfpu=fpv5-sp-d16
+#-mfpu=fpv5-d16
+
+
+
+## LFluidSynth flags
+#CFLAGS=-O3 -g -I. -Isrc -D_GNU_SOURCE
+#CFLAGS += -DFLUID_CALC_FORMAT_FLOAT -DFLUID_NEW_GEN_API 
+#CFLAGS += -DFLUID_NO_NAMES -DFLUID_ALTSFONT
+#CFLAGS += -DFLUID_SAMPLE_MMAP # TODO linux
+##CFLAGS +=-DFLUID_SAMPLE_READ_DISK -DFLUID_SAMPLE_GC 
+##CFLAGS += -DFLUID_SAMPLE_READ_CHUNK
+#CFLAGS += -DFLUID_NEW_VOICE_MOD_API
+#CFLAGS += -DFLUID_NEW_VOICE_GEN_API
+#CFLAGS += -DFLUID_NO_NRPN_EXT
+##CFLAGS += -DFLUID_FIXED_POINT
+##CFLAGS += -DFLUID_ARM_OPT
+#CFLAGS += -DFLUID_SIMPLE_IIR
+#CFLAGS += -DFLUID_AVX_OPT 
+#CFLAGS+=-march=native -mavx 
+##CFLAGS+=-ftree-vectorize -ffast-math -fsingle-precision-constant
+##SYNTH_CFLAGS=-Irt -D__LINUX_PULSE__ -D__LINUX_ALSA__ 
+
+
 
 
 # Debug and optimization flags.

@@ -426,7 +426,7 @@ namespace Gui
 	// TODO: This should be interrupt-driven.
 	void Gui::tick()
 	{
-		// Blink the cursor.
+    	// Blink the cursor.
 		// TODO: Once again, interrupts would be good for this.
 		uint32_t tNow = HAL_GetTick();
 		uint32_t dt = tNow - _tLastBlink;
@@ -445,7 +445,7 @@ namespace Gui
 			if(obj->checkDirty()) {
 		    	perfEnter(pidGui);
 				draw(obj);
-		    	perfLeave();
+				perfLeave();
 			}
 		}
 
@@ -454,13 +454,11 @@ namespace Gui
 		TS_StateTypeDef ts;
 		BSP_TS_GetState(&ts);
 		if(ts.touchDetected > 0) {
+	    	perfEnter(pidGui);
 			if(!_touch) {
-				perfEnter(pidGui);
 				int x = ts.touchX[0];
 				int y = ts.touchY[0];
 				_touchObj = objectAt(x,y);
-
-				//printf("Touch at %d,%d\n", x, y);
 
 				if(_touchObj != 0) {
 					x -= _touchObj->_gfx.getRect().getX();
@@ -468,11 +466,11 @@ namespace Gui
 					_touchObj->onTouch(x, y);
 				}
 				_touch = true;
-				perfLeave();
 			}
+			perfLeave();
 		} else {
 			if(_touchObj != 0) {
-				perfEnter(pidGui);
+		    	perfEnter(pidGui);
 				_touchObj->onRelease();
 				_touchObj = 0;
 				perfLeave();
@@ -499,15 +497,20 @@ namespace Gui
 
 	void Gui::clearScreen()
 	{
+    	perfEnter(pidGui);
 		BSP_LCD_SetBackColor(Gfx::kColourBackground);
 		BSP_LCD_Clear(Gfx::kColourBackground);
+		perfLeave();
 	}
 
 	// Write some characters to the console.
 	int Gui::consoleWrite(const char *ptr, int len, Gfx::Colour col)
 	{
+    	perfEnter(pidGui);
 		_console._gfx.restore();
-		return _console.write(_console._gfx, ptr, len, col);
+		int result = _console.write(_console._gfx, ptr, len, col);
+		perfLeave();
+		return result;
 	}
 
 } // namespace Gui
