@@ -39,11 +39,11 @@
 #include "FilterVocoder.h"
 #include "FilterWavStream.h"
 #include "FilterFluidSynth.h"
-#include "FilterDrumKit.h"
 #include "usbd_conf.h"
 #include "PerfMon.h"
 #include "PerfMeter.h"
 #include "UTimer.h"
+#include "MIDIFile.h"
 #include <stdio.h>
 #include "main.h"
 
@@ -73,6 +73,7 @@
 //}
 
 FilterFluidSynth *g_synth = 0;
+MIDIFile         *g_mid   = 0;
 
 void fnKbPress(unsigned tag)
 {
@@ -88,32 +89,44 @@ void fnKbRelease(unsigned tag)
 	}
 }
 
-const char *PATCHFILE[] = {
-	"/Soundfonts/Kaputt Sine.sf2",
-	"/Soundfonts/Analog Saw.sf2",
-	"/Soundfonts/Happy Mellow.sf2",
-	"/Soundfonts/Dirty Sub.sf2",
-	"/Soundfonts/FM Modulator.sf2",
-	"/Soundfonts/Acid SQ Neutral.sf2",
-	"/Soundfonts/Beeper.sf2",
-	"/Soundfonts/Perfect Sine.sf2",
-	"/Soundfonts/Synth E.sf2",
-	"/Soundfonts/Sine Wave.sf2",
-	"/Soundfonts/Solar Wind.sf2",
-	"/Soundfonts/Dance Trance.sf2",
-	"/Soundfonts/Candy Bee.sf2",
-	"/Soundfonts/Poly Special Mono.sf2",
-	"/Soundfonts/Hyper Saw.sf2",
-	"/Soundfonts/Super Saw 3.sf2",
-	"/Soundfonts/Super Saw 1.sf2",
-	"/Soundfonts/Super Saw 2.sf2",
-	"/Soundfonts/Pulse Wobbler.sf2",
-	0
-};
+void fnDrumStartStop(unsigned tag)
+{
+	if(0 == g_mid)
+		return;
+
+	if(g_mid->isPlaying()) {
+		g_mid->stop(g_synth);
+	} else {
+		g_mid->start(g_synth);
+	}
+}
+
+//const char *PATCHFILE[] = {
+//	"/Soundfonts/Kaputt Sine.sf2",
+//	"/Soundfonts/Analog Saw.sf2",
+//	"/Soundfonts/Happy Mellow.sf2",
+//	"/Soundfonts/Dirty Sub.sf2",
+//	"/Soundfonts/FM Modulator.sf2",
+//	"/Soundfonts/Acid SQ Neutral.sf2",
+//	"/Soundfonts/Beeper.sf2",
+//	"/Soundfonts/Perfect Sine.sf2",
+//	"/Soundfonts/Synth E.sf2",
+//	"/Soundfonts/Sine Wave.sf2",
+//	"/Soundfonts/Solar Wind.sf2",
+//	"/Soundfonts/Dance Trance.sf2",
+//	"/Soundfonts/Candy Bee.sf2",
+//	"/Soundfonts/Poly Special Mono.sf2",
+//	"/Soundfonts/Hyper Saw.sf2",
+//	"/Soundfonts/Super Saw 3.sf2",
+//	"/Soundfonts/Super Saw 1.sf2",
+//	"/Soundfonts/Super Saw 2.sf2",
+//	"/Soundfonts/Pulse Wobbler.sf2",
+//	0
+//};
 
 void fnPatch(unsigned tag)
 {
-	g_synth->replaceSF(PATCHFILE[tag]);
+	//g_synth->replaceSF(PATCHFILE[tag]);
 }
 
 
@@ -222,6 +235,7 @@ int main()
     }
 
     // Patch select
+    // TODO: Select patches within SF2 file.
     int x = 170;
     const char *NUM[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0" };
     for(int i = 0; i < 8; i++) {
@@ -231,6 +245,18 @@ int main()
     	gui->add(new Gui::Button(Gui::Rect(x, 10, 25, 30), NUM[i], 0, &fnPatch, i));
     	x += 28;
     }
+
+    // TEST: Load a MIDI file.
+    MIDIFile midiFile;
+    if(midiFile.load("/drumPattern.mid")) {
+    	printf("Loaded MIDI file OK.\r\n");
+    	g_mid = &midiFile;
+    } else {
+    	printf("MIDI File failed to load.\r\n");
+    }
+
+    // Create button to start/stop drum pattern.
+    gui->add(new Gui::Button(Gui::Rect(10, 10, 146, 30), "START", &fnDrumStartStop));
 
     uint32_t _tLastPerfUpdate = 0;
 

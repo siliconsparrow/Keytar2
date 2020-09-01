@@ -9,18 +9,27 @@
 #define FILTERFLUIDSYNTH_H_
 
 #include "AudioFilter.h"
+#include "MIDI.h"
 #include "platform.h"
 #include "lfluidsynth.h"
 
-class FilterFluidSynth: public AudioFilter {
+class FilterFluidSynth
+	: public AudioFilter
+	, public MIDISink
+{
 public:
 	FilterFluidSynth();
 	virtual ~FilterFluidSynth() { }
 
 	void replaceSF(const char *filename);
 
+	// AudioFilter implementation.
 	virtual void fillFrame(StereoSample *frame);
 
+	// MIDISink implementation.
+	virtual void send(const MIDIMessage &msg) { }
+
+	// Some other junk which can probably go.
 	void midiRecv(uint8_t *msg, uint32_t len);
 	void noteOn(unsigned noteNum, unsigned velocity);
 	void noteOff(unsigned noteNum);

@@ -79,6 +79,11 @@ SOURCES = \
 	Gui.cpp \
 	PerfMeter.cpp \
 	FileSystem.cpp \
+	MIDI.cpp \
+	MIDIMessage.cpp \
+	MIDITimer.cpp \
+	MIDITrack.cpp \
+	MIDIFile.cpp \
 	ff_gen_drv.c \
 	sd_diskio.c \
 	ff.c \
