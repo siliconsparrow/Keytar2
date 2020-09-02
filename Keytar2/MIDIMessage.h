@@ -17,10 +17,10 @@ class __attribute__((packed)) MIDIMessage
 public:
 	enum
 	{
-		kMessageMaxSize = 3,   // Exception is SYS_EX which can be any length but I don't handle those ATM.
-		kDrumtrackChannel = 9, // Traditional channel to use for drums.
-		kDrumBank = 120,       // Bank number which usually contains drums.
-		kChannels = 16         // Total number of MIDI channels.
+		kMessageMaxSize   =   3, // Exception is SYS_EX which can be any length but I don't handle those ATM.
+		kDrumtrackChannel =   9, // Traditional channel to use for drums.
+		kDrumBank         = 120, // Bank number which usually contains drums.
+		kChannels         =  16  // Total number of MIDI channels.
 	};
 
 	enum MESSAGE
@@ -50,6 +50,12 @@ public:
 		RESET        = 0xFF  // Reset all receivers to power up state.
 	};
 
+	enum MIDIChannel
+	{
+		CHANNEL1, CHANNEL2, CHANNEL3, CHANNEL4, CHANNEL5, CHANNEL6, CHANNEL7, CHANNEL8,
+		CHANNEL9, CHANNEL10, CHANNEL11, CHANNEL12, CHANNEL13, CHANNEL14, CHANNEL15, CHANNEL16
+	};
+
 	enum MIDINote
 	{
 		C0,  Cs0,  D0,  Ds0,  E0,  F0,  Fs0,  G0,  Gs0,  A0,  As0,  B0,
@@ -70,10 +76,11 @@ public:
 	MIDIMessage(MESSAGE msg, uint8_t channel, uint8_t param1) : _msg(msg), _chan(channel), _param1(param1), _param2(0) { }
 	MIDIMessage(MESSAGE msg, uint8_t channel, uint8_t param1, uint8_t param2) : _msg(msg), _chan(channel), _param1(param1), _param2(param2) { }
 
-	MESSAGE message() const { return (MESSAGE)_msg; }
-	uint8_t channel() const { return _chan; }
-	uint8_t param1()  const { return _param1; }
-	uint8_t param2()  const { return _param2; }
+	MESSAGE  message()    const { return (MESSAGE)_msg; }
+	uint8_t  channel()    const { return _chan; }
+	uint8_t  param1()     const { return _param1; }
+	uint8_t  param2()     const { return _param2; }
+	uint16_t param16bit() const { return ((_param2 & 0x7f) << 7) | (_param1 & 0x7f); }
 
 private:
 	uint8_t _msg;

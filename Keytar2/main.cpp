@@ -58,7 +58,6 @@
 #define WAV_TEST_FILENAME "/Large FX Collection/LS LFXC Short-Sound 022.wav"
 
 //FilterSample *g_wavTest = 0;
-//FilterDrumKit *g_drums = 0;
 
 //void fnPlayWav(unsigned tag)
 //{
@@ -78,14 +77,14 @@ MIDIFile         *g_mid   = 0;
 void fnKbPress(unsigned tag)
 {
 	if(g_synth != 0) {
-		g_synth->noteOn(tag, 127);
+		g_synth->send(MIDIMessage(MIDIMessage::NOTE_ON, MIDIMessage::CHANNEL1, tag, 127));
 	}
 }
 
 void fnKbRelease(unsigned tag)
 {
 	if(g_synth != 0) {
-		g_synth->noteOff(tag);
+		g_synth->send(MIDIMessage(MIDIMessage::NOTE_OFF, MIDIMessage::CHANNEL1, tag));
 	}
 }
 
@@ -190,11 +189,6 @@ int main()
     // Set up microphone input.
     FilterLineIn mic(FilterLineIn::chanLeft);
 
-    // Drum kit (we'll use fluid synth for that now)
-//    FilterDrumKit drums;
-//    drums.load("/Drums909");
-//    g_drums = &drums;
-
     // Set up fluid synth.
     FilterFluidSynth synth;
     g_synth = &synth;
@@ -248,7 +242,7 @@ int main()
 
     // TEST: Load a MIDI file.
     MIDIFile midiFile;
-    if(midiFile.load("/drumPattern.mid")) {
+    if(midiFile.load("/testMidi.mid")) {
     	printf("Loaded MIDI file OK.\r\n");
     	g_mid = &midiFile;
     } else {

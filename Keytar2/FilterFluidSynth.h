@@ -22,18 +22,19 @@ public:
 	virtual ~FilterFluidSynth() { }
 
 	void replaceSF(const char *filename);
+	bool setBank(unsigned channel, unsigned bank);
+	bool setProgram(unsigned channel, unsigned program);
 
 	// AudioFilter implementation.
 	virtual void fillFrame(StereoSample *frame);
 
 	// MIDISink implementation.
-	virtual void send(const MIDIMessage &msg) { }
+	virtual void send(const MIDIMessage &msg);
 
 	// Some other junk which can probably go.
-	void midiRecv(uint8_t *msg, uint32_t len);
-	void noteOn(unsigned noteNum, unsigned velocity);
-	void noteOff(unsigned noteNum);
-	void cc(unsigned channel, unsigned value);
+	//void noteOn(unsigned noteNum, unsigned velocity);
+	//void noteOff(unsigned noteNum);
+	//void cc(unsigned channel, unsigned value);
 
 private:
 	fluid_synth_t *_synth;

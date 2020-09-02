@@ -52,12 +52,60 @@ void FilterFluidSynth::fillFrame(StereoSample *frame)
 #endif
 }
 
+// Dump the current soundfont file and load a new one.
 void FilterFluidSynth::replaceSF(const char *filename)
 {
 	fluid_synth_sfunload(_synth, _sfId, 1);
-	// CRASHES HERE??!?!
 	_sfId = fluid_synth_sfload(_synth, filename, 1);
 }
+
+// Change bank.
+bool FilterFluidSynth::setBank(unsigned channel, unsigned bank)
+{
+	return 0 == fluid_synth_bank_select(_synth, channel, bank);
+}
+
+// Change program.
+bool FilterFluidSynth::setProgram(unsigned channel, unsigned program)
+{
+	return 0 == fluid_synth_program_change(_synth, channel, program);
+}
+
+void FilterFluidSynth::send(const MIDIMessage &msg)
+{
+	switch(msg.message())
+	{
+	case MIDIMessage::NOTE_OFF:
+		fluid_synth_noteoff(_synth, msg.channel(), msg.param1());
+		break;
+
+	case MIDIMessage::NOTE_ON:
+		fluid_synth_noteon(_synth, msg.channel(), msg.param1(), msg.param2());
+		break;
+
+	case MIDIMessage::CONTROL_CHANGE:
+		fluid_synth_cc(_synth, msg.channel(), msg.param1(), msg.param2());
+		break;
+
+	case MIDIMessage::PROGRAM_CHANGE:
+		fluid_synth_program_change(_synth, msg.channel(), msg.param1());
+		break;
+
+	case MIDIMessage::CHANNEL_PRESSURE:
+		fluid_synth_channel_pressure(_synth, msg.channel(), msg.param1());
+		break;
+
+	case MIDIMessage::PITCH_BEND:
+		fluid_synth_pitch_bend(_synth, msg.channel(), msg.param16bit());
+		break;
+
+	default:
+		break;
+	}
+}
+
+#ifdef DEPRECATED
+// TODO: All the following could be replaced with a single MIDIMessage handler.
 
 void FilterFluidSynth::noteOn(unsigned noteNum, unsigned velocity)
 {
@@ -71,34 +119,4 @@ void FilterFluidSynth::noteOff(unsigned noteNum)
 	fluid_synth_noteoff(_synth, midiChannel, noteNum);
 }
 
-void FilterFluidSynth::midiRecv(uint8_t *msg, uint32_t len) {
-
-	uint8_t chan = msg[1] & 0xf;
-	uint8_t msgtype = msg[1] & 0xf0;
-	uint8_t b1 =  msg[2];
-	uint8_t b2 =  msg[3];
-	uint16_t b = ((b2 & 0x7f) << 7) | (b1 & 0x7f);
-
-	switch (msgtype) {
-	case 0x80:
-		fluid_synth_noteoff(_synth, chan, b1);
-		break;
-	case 0x90:
-		fluid_synth_noteon(_synth, chan, b1, b2);
-		break;
-	case 0xB0:
-		fluid_synth_cc(_synth, chan, b1, b2);
-		break;
-	case 0xC0:
-		fluid_synth_program_change(_synth, chan, b1);
-		break;
-	case 0xD0:
-		fluid_synth_channel_pressure(_synth, chan, b1);
-		break;
-	case 0xE0:
-		fluid_synth_pitch_bend(_synth, chan, b);
-		break;
-	default:
-		break;
-	}
-}
+#endif // DEPRECATED
