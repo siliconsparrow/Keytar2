@@ -10,7 +10,7 @@
 //  SD card OK
 //  FatFs OK
 //  USB device (mass storage) OK
-//  USB device (MIDI) ??
+//  USB host (MIDI) ??
 //  I2S in and out OK
 //  UART
 //  DAC maybe? probably not.
@@ -20,11 +20,7 @@
 // Things I could do next:
 //   Time-domain effects (delay, granulation)
 //   Drum machine
-//   Software synth
 //   FFT
-//   Memory management - separate DMA ram using __attribute__((segment)) or whatever. Stack in SRAM and malloc allocates from SDRAM.
-
-
 
 // TODO: Make all interrupt priorities defined symbols, perhaps in hal_conf.h so
 //       I can adjust them to avoid deadlocks.
@@ -52,7 +48,7 @@
 
 // Audio uses a lot of interrupts pretty heavily so if I want
 // to debug something else, it is handy to turn it off temporarily.
-#define ENABLE_AUDIO
+//#define ENABLE_AUDIO
 
 // #define WAV_TEST_FILENAME "/Minimal Heaven vol. 1/LS-MH1 Laser Sweep 10.wav"
 #define WAV_TEST_FILENAME "/Large FX Collection/LS LFXC Short-Sound 022.wav"
@@ -125,6 +121,7 @@ void fnDrumStartStop(unsigned tag)
 
 void fnPatch(unsigned tag)
 {
+	g_synth->setProgram(0, tag);
 	//g_synth->replaceSF(PATCHFILE[tag]);
 }
 
@@ -165,8 +162,6 @@ int main()
     HAL_Init();
     SystemClock_Config(); // Set a faster core speed (216MHz)
 
-    uTimerInit();
-
     perfInit();
 
     // Set up screen and text rendering.
@@ -190,6 +185,7 @@ int main()
     FilterLineIn mic(FilterLineIn::chanLeft);
 
     // Set up fluid synth.
+    uTimerInit();
     FilterFluidSynth synth;
     g_synth = &synth;
 

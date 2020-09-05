@@ -8,14 +8,12 @@
 // *****************************************************************************
 
 #include "MIDIFile.h"
-//#include "MIDI.h"
-//#include <string.h>
+#include "MIDI.h"
+#include "FileSystem.h"
+#include <string.h>
 //#include <malloc.h>
 
-#ifdef OLD
-
-// Overview of the MIDI file format:
-//    http://faydoc.tripod.com/formats/mid.htm
+// Overview of the MIDI file format:   http://faydoc.tripod.com/formats/mid.htm
 
 // 4CC identifier found at the start of a MID file.
 #define MID_FILE_MAGIC  ((const uint8_t *)"MThd")
@@ -30,32 +28,27 @@ struct __attribute__((packed)) MIDFileHeader
 	uint16_t numTracks;        // Number of MIDI tracks in this file.
 	uint16_t ticksPerCrotchet; // How many tempo ticks per quarter-note.
 };
-#endif // OLD
+
 
 MIDIFile::MIDIFile()
-#ifdef OLD
 	: _fileFormat(MIDIFile::MF_SINGLE_TRACK)
-	, _ticksPerCrotchet(MIDI_TICKS_PER_BEAT)
 	, _numTracks(0)
 	, _track(0)
+	, _ticksPerCrotchet(MIDITimer::kDefaultTicksPerBeat)
 	, _tempo(0)
-	, _timesigNum(MIDI_DEFAULT_TIMESIG_NUM)
-	, _timesigDenom(MIDI_DEFAULT_TIMESIG_DENOM)
+	, _timesigNum(MIDITimer::kDefaultTimeSigNum)
+	, _timesigDenom(MIDITimer::kDefaultTimeSigDenom)
 	, _songLength(0)
-#endif // OLD
 {
 }
 
 MIDIFile::~MIDIFile()
 {
-#ifdef OLD
 	delete[] _track;
-#endif // OLD
 }
 
 bool MIDIFile::load(const TCHAR *filename)
 {
-#ifdef OLD
 	FileSystem::File f;
 	if(!f.open(filename)) {
 		return false;
@@ -65,7 +58,7 @@ bool MIDIFile::load(const TCHAR *filename)
 	
 	// Read the MID header.
 	if(!f.read((uint8_t *)&hdr, sizeof(MIDFileHeader)))
-		return false; // Failed to read file header.int
+		return false; // Failed to read file header.
 	
 	// Check the identity sequence.
 	if(0 != memcmp(hdr.magic, MID_FILE_MAGIC, sizeof(hdr.magic)) || 6 != ntohl(hdr.hdrSize) || ntohs(hdr.fileFormat) > 2)
@@ -83,13 +76,25 @@ bool MIDIFile::load(const TCHAR *filename)
 	_track = new MIDITrack[_numTracks];
 
 	_songLength = 0;
-	for(unsigned idxTrack = 0; idxTrack < _numTracks; idxTrack++)
+	for(int idxTrack = 0; idxTrack < _numTracks; idxTrack++)
 	{
-		if(!_track[idxTrack].load(f, *this))
-			return false;
+		MIDITrack &currentTrack = _track[idxTrack];
 
-		// TODO: Sometimes you get MIDI tracks with no events. Can they be deleted?
+		while(1)
+		{
+			if(!currentTrack.load(f, *this))
+				return false;
 
+			// Does the track contain any notes? If so, we are good to continute.
+			if(!currentTrack.isEmpty())
+				break;
+
+			// Track was blank or just contained metadata which is useless for replay
+			// purposes. So ignore it and don't count it towards the total tracks.
+			_numTracks--;
+		}
+
+		// Set the song length to that of the longest track.
 		unsigned trackLength = _track[idxTrack].getTotalLength();
 		if(trackLength > _songLength)
 			_songLength = trackLength;
@@ -98,8 +103,6 @@ bool MIDIFile::load(const TCHAR *filename)
 	_timer.setLoopPoint(_songLength);
 
 	return true;
-#endif // OLD
-	return false;
 }
 
 #ifdef OLD
@@ -120,6 +123,7 @@ void MIDIFile::changeTimebase(unsigned newTimebase)
 	if(_timer.getLoopPoint() != MIDITIMER_NO_LOOP)
 		_timer.setLoopPoint(_songLength);
 }
+#endif // OLD
 
 // Erase all data.
 void MIDIFile::clear()
@@ -135,14 +139,11 @@ unsigned MIDIFile::getTicksPerBar() const
 	return (_ticksPerCrotchet * 4 * _timesigNum) / _timesigDenom;
 }
 
-#endif // OLD
-
 bool MIDIFile::isPlaying() const
 {
 	// TODO: Implement me!
 	return false;
 }
-
 
 // Rewind all tracks to the start.
 void MIDIFile::rewind()

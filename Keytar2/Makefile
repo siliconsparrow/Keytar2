@@ -81,6 +81,7 @@ SOURCES = \
 	FileSystem.cpp \
 	MIDI.cpp \
 	MIDIMessage.cpp \
+	MIDIEvent.cpp \
 	MIDITimer.cpp \
 	MIDITrack.cpp \
 	MIDIFile.cpp \
@@ -181,7 +182,7 @@ COMMONFLAGS += -mfloat-abi=hard -mfpu=fpv5-sp-d16
 
 # Debug and optimization flags.
 #DEBUGFLAGS = -D__DEBUG -g -O0
-DEBUGFLAGS = -g -O3
+DEBUGFLAGS = -g -O0
 RELEASEFLAGS = -O3 -g0
 
 # Additional compiler flags for C

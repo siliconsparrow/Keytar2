@@ -7,13 +7,13 @@
 // **
 // *****************************************************************************
 
-//#include "MIDIFile.h"
+#include "MIDITrack.h"
+#include "MIDIFile.h"
 //#include "MIDI.h"
 //#include "File.h"
-//#include <string.h>
-//#include <malloc.h>
-
-#ifdef OLD
+#include <string.h>
+#include <malloc.h>
+#include <stdio.h>
 
 // 4CC code used to identify a MIDI track within a MID file.
 #define MID_TRACK_MAGIC ((const uint8_t *)"MTrk")
@@ -25,24 +25,27 @@ struct __attribute__((packed)) MIDTrk
 	uint32_t length;
 };
 
+
 // Initialize a new, blank MIDI track.
 MIDITrack::MIDITrack()
 	: _event(0)
 	, _numEvents(0)
 	, _trackLength(0)
+#ifdef OLD
 	, _currentEvent(0)
 	, _currentTime(0)
+#endif // OLD
 	, _channelMap(0)
 {
 }
 
 MIDITrack::~MIDITrack()
 {
-	delete[] _event;
+	free(_event);
 }
 
 // Load a MIDI track from the file.
-bool MIDITrack::load(File &f, MIDIFile &m)
+bool MIDITrack::load(FileSystem::File &f, MIDIFile &m)
 {
 	MIDTrk hdrTrack;
 
@@ -53,87 +56,92 @@ bool MIDITrack::load(File &f, MIDIFile &m)
 		return false; // Track header invalid.
 
 	// Delete any old data.
-	delete[] _event;
+	free(_event);
 	_event = 0;
 	_numEvents = 0;
 
 	// This is the track length in bytes.
 	uint32_t trackLength = ntohl(hdrTrack.length);
 
-	// Allocate RAM to store MIDI events. Err on the side of allocating too much.
-	//unsigned maxEvents = trackLength / 2;
-	//_event = new MIDIMessage[maxEvents];
-
 	// Read the MIDI events.
 	uint32_t byteCount = 0;
 	unsigned totalTime = 0;
+	unsigned arrayCount = 0;
 	while(byteCount < trackLength)
 	{
-		MIDIMessage msg;
-		int r = msg.load(f, m);
-		if(r <= 0)
-			return false; // File read failure.
-
-		totalTime += msg.getDeltaTime();
-
-		byteCount += r;
-
-		if(msg.dataLength() > 0)
+		// Allocate space for another MIDI event.
+		if(_numEvents + 1 > arrayCount)
 		{
-			MIDIMessage *newArray = (MIDIMessage *)realloc(_event, sizeof(MIDIMessage) * (_numEvents + 1));
+			arrayCount += 100; // Allocate 100 events at a time, faster than allocating each one.
+			MIDIEvent *newArray = (MIDIEvent *)realloc(_event, sizeof(MIDIEvent) * arrayCount);
 			if(newArray == 0)
-				return false; // Out of memory.
+			{
+				printf("OUT OF MEMORY!\r\n");
+				return false;
+			}
 
 			_event = newArray;
-			_event[_numEvents++] = msg;
-
-
-			_channelMap |= (1 << msg.getChannel());
 		}
-/*
-		MIDIMessage &msg = _event[_numEvents];
 
-		int r = msg.load(f, m);
+		// Decode the next MIDI event.
+		MIDIEvent *evt = &_event[_numEvents];
+		int r = evt->load(f, m);
 		if(r <= 0)
 			return false; // File read failure.
 
-		totalTime += msg.getDeltaTime();
+		totalTime += evt->getDeltaTime();
+
+		// Check if it's an actual note event and not metadata.
+		if(evt->dataLength() > 0)
+		{
+			_numEvents++;
+			_channelMap |= (1 << evt->channel());
+		}
 
 		byteCount += r;
-
-		// Meta events will come back with a data length of zero but we don't
-		// want to store them in the playback stream.
-		if(_numEvents < maxEvents && msg.dataLength() > 0)
-		{
-			_channelMap |= (1 << msg.getChannel());
-			_numEvents++;
-		}
-		*/
 	}
 
-	// Free any unused space.
-	unsigned trackSize = sizeof(MIDIMessage) * _numEvents;
-	_event = (MIDIMessage *)realloc(_event, trackSize);
+	// We probably allocated more RAM than was needed so trim it back a bit.
+	if(arrayCount > _numEvents)
+	{
+		if(_numEvents == 0)
+		{
+			free(_event);
+			_event = 0;
+		}
+		else
+		{
+			_event = (MIDIEvent *)realloc(_event, sizeof(MIDIEvent) * _numEvents);
+			if(_event == 0)
+			{
+				printf("MEMORY MANAGEMENT ERROR.\r\n");
+				return false;
+			}
+		}
+	}
 
 	// Work out the total length of the track to the nearest bar.
 	unsigned ticksPerBar = m.getTicksPerBar();
 	unsigned bars = totalTime / ticksPerBar;
-	if(0 != totalTime % ticksPerBar)
+	if(0 != totalTime % ticksPerBar) // Handle partial bars.
 		bars++;
 
 	_trackLength = bars * ticksPerBar;
 
+#ifdef OLD
 	// Match up note-on and note-off messages to make life easy for the accompaniment system.
 	linkNoteMessages();
 
 	// Find initial program and control messages.
 	findSetupMessages();
+#endif // OLD
 
 	// Done.
 	rewind();
 	return true;
 }
 
+#ifdef OLD
 // Links up note-on and corresponding note-off messages. This is needed
 // to help with the transposition in the accompaniment system.
 void MIDITrack::linkNoteMessages()
@@ -239,14 +247,17 @@ void MIDITrack::stop(MIDI *midiOut)
 			midiOut->allNotesOff(channel & 15);
 	}
 }
+#endif // OLD
 
 void MIDITrack::rewind()
 {
+#ifdef OLD
 	_currentEvent = 0;
 	_currentTime = 0;
+#endif // OLD
 }
 
-
+#ifdef OLD
 // Scan the track and find the first program change and control change
 // message for each channel.
 void MIDITrack::findSetupMessages()

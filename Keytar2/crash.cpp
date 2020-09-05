@@ -71,7 +71,7 @@ extern "C" {
 	void     DMA1_Stream7_IRQHandler() { crash(57); }
 	void     FMC_IRQHandler() { crash(58); }
 //	void     SDMMC1_IRQHandler() { crash(59); }
-	void     TIM5_IRQHandler() { crash(60); }
+//	void     TIM5_IRQHandler() { crash(60); }
 	void     SPI3_IRQHandler() { crash(61); }
 	void     UART4_IRQHandler() { crash(62); }
 	void     UART5_IRQHandler() { crash(63); }

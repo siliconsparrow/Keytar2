@@ -1,13 +1,11 @@
 // *****************************************************************************
 // **
-// ** Timer to generate tempo and count where we are up to in a sequence.
+// ** Timer to generate tempo and count for MIDI file replay.
 // **
 // **   by Adam Pierce <adam@siliconsparrow.com>
 // **   created 28-Apr-2018
 // **
 // *****************************************************************************
-
-#ifdef OLD
 
 // IDEA: Maybe there could be a singleton timer instance and each instance of
 //       the MIDITimer class has an independent counter, that way you could run
@@ -17,62 +15,74 @@
 // TODO: Override the timer when there are incoming MIDI clock messages.
 
 #include "MIDITimer.h"
-#include "lpc43xx_timer.h"
+#include "stm32f7xx_hal.h"
+#include "stm32f7xx_hal_rcc_ex.h"
 #include <vector>
 
-// You can change these if you want to use a different timer device.
-// Timers 0, 1, 2 and 3 are compatible with this module.
-#define MIDI_TIMER_DEVICE  LPC_TIMER0
-#define MIDI_TIMER_IRQN    TIMER0_IRQn
-#define MIDI_TIMER_HANDLER TIMER0_IRQHandler
+#define MIDITIMER_DEVICE     TIM5
+#define MIDITIMER_FREQ       1000000
+#define MIDITIMER_IRQN       TIM5_IRQn
+#define MIDITIMER_HANDLER    TIM5_IRQHandler
+#define MIDITIMER_RCC_ENABLE __HAL_RCC_TIM5_CLK_ENABLE
 
-static std::vector<MIDITimer*> g_timers;
+#ifdef OLD
+#endif // OLD
 
-static unsigned g_newMatchValue = 0;
-static unsigned g_beatsPerBar = 4;
+// Erk, globals!
+static std::vector<MIDITimer*> g_timers; // List of timer objects to be notified each tick.
+static TIM_HandleTypeDef       hMidiTimer;
+static unsigned                g_newMatchValue = 0;
+static unsigned                g_beatsPerBar = 4;
 
-extern "C" void MIDI_TIMER_HANDLER()
+extern "C" void MIDITIMER_HANDLER()
 {
-	TIM_ClearIntPending(MIDI_TIMER_DEVICE, TIM_MR0_INT);
-
-	// If the tempo has changed, adjust the interrupt timing.
-	if(g_newMatchValue > 0)
+	// Check for counter overflow event.
+	if(0 != (MIDITIMER_DEVICE->SR & TIM_SR_UIF))
 	{
-		//if(MIDI_TIMER_DEVICE->TC < g_newMatchValue)
-		MIDI_TIMER_DEVICE->MR[0] = g_newMatchValue;
-		MIDI_TIMER_DEVICE->TC = 0;
-		//TIM_UpdateMatchValue(MIDI_TIMER_DEVICE, 0, g_newMatchValue);
-		g_newMatchValue = 0;
-	}
+		MIDITIMER_DEVICE->SR &= ~(TIM_SR_UIF);
 
-	// Trigger anything that needs to be triggered.
-	for(unsigned i = 0; i < g_timers.size(); i++)
-		g_timers[i]->tick();
+		// If the tempo has changed, adjust the interrupt timing.
+		if(g_newMatchValue > 0)
+		{
+			__HAL_TIM_SET_AUTORELOAD(&hMidiTimer, g_newMatchValue);
+			g_newMatchValue = 0;
+		}
+
+		// Trigger anything that needs to be triggered.
+		for(unsigned i = 0; i < g_timers.size(); i++)
+			g_timers[i]->tick();
+	}
 }
+
 
 // Set up a hardware timer
 MIDITimer::MIDITimer()
 	: _tickCount(0)
-	, _loopPoint(MIDITIMER_NO_LOOP)
-	, _hasLooped(false)
-	, _beat(0)
-	, _bar(0)
-	, _beatCount(0)
+	, _loopPoint(kTimerNoLoop)
+//	, _hasLooped(false)
+//	, _beat(0)
+//	, _bar(0)
+//	, _beatCount(0)
 {
-	// Set up the timer if that had not been done before.
-	if(g_timers.empty())
-		timerInit();
+	static bool g_hwInit = false;
 
-	// Add ourself to the notification list. This will call our tick() function every timer interrupt.
-	NVIC_DisableIRQ(MIDI_TIMER_IRQN);
+	// Set up timer interrupt if we previously had not.
+	if(!g_hwInit)
+	{
+		timerInit();
+		g_hwInit = true;
+	}
+
+	// Add the new object to the list.
+	NVIC_DisableIRQ(MIDITIMER_IRQN);
 	g_timers.push_back(this);
-	NVIC_EnableIRQ(MIDI_TIMER_IRQN);
+	NVIC_EnableIRQ(MIDITIMER_IRQN);
 }
 
 MIDITimer::~MIDITimer()
 {
 	// Remove ourself from the notification list.
-	NVIC_DisableIRQ(MIDI_TIMER_IRQN);
+	NVIC_DisableIRQ(MIDITIMER_IRQN);
 	for(unsigned i = 0; i < g_timers.size(); )
 	{
 		if(g_timers[i] == this)
@@ -81,36 +91,9 @@ MIDITimer::~MIDITimer()
 		else
 			i++;
 	}
-	NVIC_EnableIRQ(MIDI_TIMER_IRQN);
+	NVIC_EnableIRQ(MIDITIMER_IRQN);
 }
 
-//// When added to the list, this object will have it's tick() member called
-//// with every MIDI tick.
-//void MIDITimer::addToNotificationList()
-//{
-//	// Check we are not already on the list.
-//	for(unsigned i = 0; i < g_timers.size(); i++)
-//	{
-//		if(g_timers[i] == this)
-//			return;
-//	}
-//
-//	// Add to the list.
-//	g_timers.push_back(this);
-//}
-
-//// This object will no longer receive tick() notifications from the timer interrupt.
-//void MIDITimer::removeFromNotificationList()
-//{
-//	for(unsigned i = 0; i < g_timers.size(); )
-//	{
-//		if(g_timers[i] == this)
-//			g_timers.erase(g_timers.begin() + i);
-//
-//		else
-//			i++;
-//	}
-//}
 
 unsigned MIDITimer::getBeatsPerBar()
 {
@@ -120,38 +103,34 @@ unsigned MIDITimer::getBeatsPerBar()
 // Set up the timer to regularly call the interrupt.
 void MIDITimer::timerInit()
 {
-	TIM_TIMERCFG_Type TIM_ConfigStruct;
-	TIM_MATCHCFG_Type TIM_MatchConfigStruct;
+	// Activate the timer.
+	MIDITIMER_RCC_ENABLE();
 
-	//TIM_DeInit(MIDI_TIMER_DEVICE);
+	// Compute the prescaler value
+	uint32_t uwPrescalerValue = (uint32_t) ((SystemCoreClock / 2) / MIDITIMER_FREQ) - 1;
 
-	// Initialize timer 0, prescale count time of 1uS
-	TIM_ConfigStruct.PrescaleOption = TIM_PRESCALE_USVAL;
-	TIM_ConfigStruct.PrescaleValue	= 1;
+	// Set TIMx instance
+	hMidiTimer.Instance = MIDITIMER_DEVICE;
+	hMidiTimer.Init.Period = calculateTimerMatchValue(kDefaultTempo);
+	hMidiTimer.Init.Prescaler = uwPrescalerValue;
+	hMidiTimer.Init.ClockDivision = 0;
+	hMidiTimer.Init.CounterMode = TIM_COUNTERMODE_UP;
+	hMidiTimer.Init.RepetitionCounter = 0;
+	hMidiTimer.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+	if(HAL_TIM_Base_Init(&hMidiTimer) != HAL_OK) {
+		while(1)
+			; // Initialization Error
+	}
 
-	// use channel 0, MR0
-	TIM_MatchConfigStruct.MatchChannel = 0;
-	// Enable interrupt when MR0 matches the value in TC register
-	TIM_MatchConfigStruct.IntOnMatch   = TRUE;
-	//Enable reset on MR0: TIMER will reset if MR0 matches it
-	TIM_MatchConfigStruct.ResetOnMatch = TRUE;
-	//Stop on MR0 if MR0 matches it
-	TIM_MatchConfigStruct.StopOnMatch  = FALSE;
-	//Toggle MR0.0 pin if MR0 matches it
-	TIM_MatchConfigStruct.ExtMatchOutputType = TIM_EXTMATCH_NOTHING;
-	// Set Match value
-	TIM_MatchConfigStruct.MatchValue   = calculateTimerMatchValue(MIDI_DEFAULT_TEMPO);
+	// Set up timer overflow interrupt (occurs evert 65536us).
+	MIDITIMER_DEVICE->DIER |= TIM_DIER_UIE;
+	NVIC_EnableIRQ(MIDITIMER_IRQN);
 
-	// Set configuration for Tim_config and Tim_MatchConfig
-	TIM_Init(MIDI_TIMER_DEVICE, TIM_TIMER_MODE,&TIM_ConfigStruct);
-	TIM_ConfigMatch(MIDI_TIMER_DEVICE,&TIM_MatchConfigStruct);
-
-	/* preemption = 1, sub-priority = 1 */
-	NVIC_SetPriority(MIDI_TIMER_IRQN, ((0x01<<3)|0x01));
-	/* Enable interrupt for timer 0 */
-	NVIC_EnableIRQ(MIDI_TIMER_IRQN);
-	// To start timer 0
-	TIM_Cmd(MIDI_TIMER_DEVICE, ENABLE);
+	// Start the timer.
+	if(HAL_TIM_Base_Start(&hMidiTimer) != HAL_OK) {
+		while(1)
+			; // Starting Error
+	}
 }
 
 // Set the timer to trigger at the desired clock rate.
@@ -171,26 +150,27 @@ void MIDITimer::tick()
 	_tickCount++;
 	if(_tickCount >= _loopPoint)
 	{
-		_hasLooped = true;
+		//_hasLooped = true;
 		_tickCount = 0;
-		_bar = 0;
-		_beat = 0;
-		_beatCount = 0;
+		//_bar = 0;
+		//_beat = 0;
+		//_beatCount = 0;
 	}
 
-	_beatCount++;
-	if(_beatCount >= MIDI_TICKS_PER_BEAT)
-	{
-		_beat++;
-		_beatCount = 0;
-		if(_beat >= g_beatsPerBar)
-		{
-			_beat = 0;
-			_bar++;
-		}
-	}
+//	_beatCount++;
+//	if(_beatCount >= MIDI_TICKS_PER_BEAT)
+//	{
+//		_beat++;
+//		_beatCount = 0;
+//		if(_beat >= g_beatsPerBar)
+//		{
+//			_beat = 0;
+//			_bar++;
+//		}
+//	}
 }
 
+#ifdef OLD
 // Get the current tick count.
 unsigned MIDITimer::getCurrentTime() const
 {
@@ -212,6 +192,7 @@ void MIDITimer::resetTime()
 	_beat = 0;
 	_beatCount = 0;
 }
+#endif // OLD
 
 // Set up for looping or pass MIDITIMER_NO_LOOP for no looping.
 void MIDITimer::setLoopPoint(unsigned lp)
@@ -221,7 +202,5 @@ void MIDITimer::setLoopPoint(unsigned lp)
 
 unsigned MIDITimer::calculateTimerMatchValue(unsigned bpm)
 {
-	return (60000000 / bpm) / MIDI_TICKS_PER_BEAT;
+	return (60000000 / bpm) / kDefaultTicksPerBeat;
 }
-
-#endif // OLD

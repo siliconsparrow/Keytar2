@@ -17,7 +17,6 @@ class __attribute__((packed)) MIDIMessage
 public:
 	enum
 	{
-		kMessageMaxSize   =   3, // Exception is SYS_EX which can be any length but I don't handle those ATM.
 		kDrumtrackChannel =   9, // Traditional channel to use for drums.
 		kDrumBank         = 120, // Bank number which usually contains drums.
 		kChannels         =  16  // Total number of MIDI channels.
@@ -71,16 +70,19 @@ public:
 		C10, Cs10, D10, Ds10, E10, F10, Fs10, G10, Gs10, A10, As10, B10,
 	};
 
-	MIDIMessage() : _msg(0), _chan(0), _param1(0), _param2(0) { }
-	MIDIMessage(MESSAGE msg, uint8_t channel) : _msg(msg), _chan(channel), _param1(0), _param2(0) { }
-	MIDIMessage(MESSAGE msg, uint8_t channel, uint8_t param1) : _msg(msg), _chan(channel), _param1(param1), _param2(0) { }
-	MIDIMessage(MESSAGE msg, uint8_t channel, uint8_t param1, uint8_t param2) : _msg(msg), _chan(channel), _param1(param1), _param2(param2) { }
+	MIDIMessage();
+	MIDIMessage(MESSAGE msg, uint8_t channel, uint8_t param1 = 0, uint8_t param2 = 0);
 
-	MESSAGE  message()    const { return (MESSAGE)_msg; }
-	uint8_t  channel()    const { return _chan; }
-	uint8_t  param1()     const { return _param1; }
-	uint8_t  param2()     const { return _param2; }
-	uint16_t param16bit() const { return ((_param2 & 0x7f) << 7) | (_param1 & 0x7f); }
+	void set(uint8_t msg, uint8_t channel, uint8_t param1 = 0, uint8_t param2 = 0);
+
+	MESSAGE   message()    const { return (MESSAGE)_msg; }
+	uint8_t   channel()    const { return _chan; }
+	uint8_t   param1()     const { return _param1; }
+	uint8_t   param2()     const { return _param2; }
+	uint16_t  param16bit() const { return ((_param2 & 0x7f) << 7) | (_param1 & 0x7f); }
+	unsigned  dataLength() const { return messageLength(_msg); }
+
+	static unsigned messageLength(uint8_t cmd);
 
 private:
 	uint8_t _msg;
@@ -89,65 +91,32 @@ private:
 	uint8_t _param2;
 };
 
-#ifdef OLD
-#include <stdint.h>
-
-#define TRANSPOSE_NOLOCK 0x10000
-
-#define MIDI_MESSAGE_MAX_SIZE 3 // Exception is SYS_EX which can be any length but I don't handle those ATM.
-
-#define DRUMTRACK_CHANNEL   9
-#define DRUM_BANK         120
-#define MIDI_NUM_CHANNELS  16
-
-typedef uint32_t MIDITimestamp;
-
-class File;
-class MIDIFile;
-class __attribute__((packed)) MIDIMessage
+// Take bytes from some MIDI source and decode into MIDI messages.
+class MIDIDecoder
 {
 public:
-	enum MIDI_MESSAGE
-	{
-		// Standard messages.
-		NOTE_OFF         = 0x80, // Note off - params: note number, velocity
-		NOTE_ON          = 0x90, // Note on  - params: note number, velocity
-		POLY_PRESSURE    = 0xA0, // Poly pressure - params: note number, pressure
-		CONTROL_CHANGE   = 0xB0, // Control change - params: controller number, value
-		PROGRAM_CHANGE   = 0xC0, // Program change - params: program number
-		CHANNEL_PRESSURE = 0xD0, // Aftertouch - params: pressure
-		PITCH_BEND       = 0xE0, // Pitch bend - params: lsb, msb
+	MIDIDecoder(MIDIMessage *msg);
 
-		// System messages.
-		SYSTEM       = 0xF0,
-		SYS_EX_START = 0xF0, // Start sending proprietary data.
-		QFRAME       = 0xF1, // MIDI Time Code quarter frame. Params: 0nnndddd (msg nnn = type, dddd = value)
-		SONG_POS     = 0xF2, // Number of beats since start of song. Params: lsb, msb
-		SONG_SELECT  = 0xF3, // Select sequence. Params: sequence number.
-		TUNE_REQUEST = 0xF6, // Request instrument tune itself. No params.
-		SYS_EX_END   = 0xF7, // End of proprietary data (see SYS_EX_START)
-		SEQ_CLOCK    = 0xF8, // Sequence clock. Sent 24 times per quarter note. No params
-		SEQ_START    = 0xFA, // Sequence start. No params.
-		SEQ_CONTINUE = 0xFB, // Sequence continue. No params.
-		SEQ_STOP     = 0xFC, // Sequence stop. No params.
-		ACTIVE_SENSE = 0xFE, // Send 3x per second. Used as keepalive in some systems. No params.
-		RESET        = 0xFF  // Reset all receivers to power up state.
+	bool decodeByte(uint8_t b);
+
+private:
+	enum
+	{
+		kMessageMaxSize = 3, // Exception is SYS_EX which can be any length but I don't handle those ATM.
 	};
 
-	MIDIMessage();
-	MIDIMessage(MIDITimestamp ts, MIDI_MESSAGE msg, uint8_t channel);
-	MIDIMessage(MIDITimestamp ts, MIDI_MESSAGE msg, uint8_t channel, uint8_t param1);
-	MIDIMessage(MIDITimestamp ts, MIDI_MESSAGE msg, uint8_t channel, uint8_t param1, uint8_t param2);
+	MIDIMessage *_msg;
+	uint8_t      _data[kMessageMaxSize];
+	unsigned     _len;
+	uint8_t      _lastMsg;
+};
 
-	int load(File &f, MIDIFile &m);
-
-	void set(MIDI_MESSAGE msg);
-	void set(MIDI_MESSAGE msg, uint8_t param1);
-	void set(MIDI_MESSAGE msg, uint8_t param1, uint8_t param2);
+#ifdef OLD
+#define TRANSPOSE_NOLOCK 0x10000
 
 	void setChannel(unsigned ch) { _data[0] = (_data[0] & 0xF0) | (ch & 0xF); }
 
-	static unsigned messageLength(uint8_t cmd);
+
 
 	MIDI_MESSAGE msgType() const;
 
@@ -158,7 +127,7 @@ public:
 	const uint8_t *data()         const { return _data; }
 	unsigned       dataLength()   const { return _len; }
 	uint8_t        getChannel()   const { return _data[0] & 0xF; }
-	unsigned       getDeltaTime() const { return _ts; }
+
 
 	void           dataTransposed(uint8_t *result, int transpose, bool minor);
 	void           dataCopy(uint8_t *result);
@@ -174,7 +143,6 @@ private:
 	MIDIMessage  *_linkedEvent;
 	int           _lockTranspose;
 
-	static int loadTimestamp(MIDITimestamp *result, File &f);
 
 	static uint8_t getBaseNote(uint8_t n);
 

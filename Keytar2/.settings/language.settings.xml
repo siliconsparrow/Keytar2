@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project>
     	
-    <configuration id="ilg.gnuarmeclipse.managedbuild.cross.toolchain.base.268185425" name="Default">
+    <configuration id="ilg.gnuarmeclipse.managedbuild.cross.toolchain.base.268185425" name="Debug">
         		
         <extension point="org.eclipse.cdt.core.LanguageSettingsProvider">
             			

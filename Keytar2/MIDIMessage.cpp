@@ -7,11 +7,32 @@
 // **
 // *****************************************************************************
 
-//#include "MIDIMessage.h"
-//#include "File.h"
-//#include "MIDIFile.h"
+#include "MIDIMessage.h"
 
-#ifdef OLD
+
+MIDIMessage::MIDIMessage()
+	: _msg(0)
+	, _chan(0)
+	, _param1(0)
+	, _param2(0)
+{
+}
+
+MIDIMessage::MIDIMessage(MESSAGE msg, uint8_t channel, uint8_t param1, uint8_t param2)
+	: _msg((uint8_t)msg)
+	, _chan(channel)
+	, _param1(param1)
+	, _param2(param2)
+{
+}
+
+void MIDIMessage::set(uint8_t msg, uint8_t channel, uint8_t param1, uint8_t param2)
+{
+	_msg    = msg;
+	_chan   = channel;
+	_param1 = param1;
+	_param2 = param2;
+}
 
 // Return the number of bytes in a packet of the given message type.
 unsigned MIDIMessage::messageLength(uint8_t cmd)
@@ -19,11 +40,66 @@ unsigned MIDIMessage::messageLength(uint8_t cmd)
 	const int MIDI_PACKET_LEN[] = { 3, 3, 3, 3, 2, 2, 3 };
 	const int MIDI_SYS_PACKET_LEN[] = { 1, 2, 3, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 
-	if(cmd >= SYSTEM)
-		return MIDI_SYS_PACKET_LEN[cmd - (uint8_t)SYSTEM];
+	if(cmd < 0x80)
+		return 0;
+
+	if(cmd >= MIDIMessage::SYSTEM)
+		return MIDI_SYS_PACKET_LEN[cmd - (uint8_t)MIDIMessage::SYSTEM];
 
 	return MIDI_PACKET_LEN[(cmd & 0x70) >> 4];
 }
+
+
+
+// Take bytes from some MIDI source and decode into MIDI messages.
+MIDIDecoder::MIDIDecoder(MIDIMessage *msg)
+	: _msg(msg)
+	, _len(0)
+	, _lastMsg(0)
+{
+	_data[1] = 0;
+	_data[2] = 0;
+}
+
+// Decode one byte of an incoming MIDI message.
+// If it has a complete message, it will return
+// a pointer to it. Otherwise it returns NULL.
+bool MIDIDecoder::decodeByte(uint8_t b)
+{
+	if(0 != (b & 0x80)) // Is this the start byte of a MIDI message?
+	{
+		_len = 0;
+		_lastMsg = b;
+		_data[_len++] = b;
+	}
+	else if(_len < kMessageMaxSize)
+	{
+		_data[_len++] = b;
+	}
+	else
+	{
+		// Handle "Running Status" messages.
+		_len = 0;
+		_data[_len++] = _lastMsg;
+		_data[_len++] = b;
+	}
+
+	if(_len >= MIDIMessage::messageLength(_data[0]))
+	{
+		if(_data[0] >= MIDIMessage::SYSTEM)
+			_msg->set(_data[0], 0, _data[1], _data[2]);
+		else
+			_msg->set(_data[0] & 0xF0, _data[0] & 0x0F, _data[1], _data[2]);
+
+		_len = 0;
+		return true;
+	}
+
+	return false;
+}
+
+
+#ifdef OLD
 
 // Extract the command nibble from the packet.
 MIDIMessage::MIDI_MESSAGE MIDIMessage::msgType() const
@@ -37,30 +113,6 @@ MIDIMessage::MIDI_MESSAGE MIDIMessage::msgType() const
 	return (MIDI_MESSAGE)(0xF0 & _data[0]);
 }
 
-// Decode an incoming byte.
-// Return true if we now have a complete MIDI message.
-bool MIDIMessage::decodeByte(uint8_t &lastMsg, uint8_t b)
-{
-	// Decode one byte of an incoming MIDI message.
-	if(0 != (b & 0x80)) // Is this the start byte of a MIDI message?
-	{
-		_len = 0;
-		lastMsg = b;
-		_data[_len++] = b;
-	}
-	else if(_len < MIDI_MESSAGE_MAX_SIZE)
-		_data[_len++] = b;
-
-	else
-	{
-		// Handle "Running Status" messages.
-		_len = 0;
-		_data[_len++] = lastMsg;
-		_data[_len++] = b;
-	}
-
-	return _len >= messageLength(_data[0]);
-}
 
 // This is an invalid message object.
 MIDIMessage::MIDIMessage()
@@ -141,115 +193,6 @@ const char *MIDIMessage::toHex() const
 	return result;
 }
 
-// Meta-events are command 0xFF. The next byte will be one of these types.
-// the 3rd byte is the data length. This is followed by the data bytes.
-enum MetaEventType
-{
-	META_SEQUENCE_NUMBER,       // META  0 - Sequence number
-	META_TEXT,                  // META  1 - Text
-	META_TEXT_COPYRIGHT,        // META  2 - Copyright text
-	META_TEXT_TRACK_NAME,       // META  3 - Track name
-	META_TEXT_INSTRUMENT_NAME,  // META  4 - Instrument name
-	META_TEXT_LYRICS,           // META  5 - Lyrics
-	META_TEXT_MARKER,           // META  6 - Marker text
-	META_TEXT_CUE_POINT,        // META  7 - Cue point
-	META_CHANNEL_PREFIX = 0x20, // META 32 - All following meta only apply to the given channel.
-	META_TRACK_END = 0x2F,      // META 47 - Track end
-	META_TEMPO = 0x51,          // META 81 - Tempo (24 bit, microseconds per quarter note)
-	META_SMTPE_OFFSET = 0x54,   // META 84 - Track start time in SMTPE format.
-	META_TIME_SIGNATURE = 0x58, // META 88 - Time signature
-	META_KEY_SIGNATURE = 0x59,  // META 89 - Key signature
-
-	META_SEQUENCER_EXCLUSIVE_DATA = 0x7F // META 7F - Proprietary data
-};
-
-// Read a MIDI timestamp from a file. Timestamps are encoded in a variable length
-// manner kind of like UTF-8.
-// Returns the number of bytes consumed or -1 on disk error.
-int MIDIMessage::loadTimestamp(MIDITimestamp *result, File &f)
-{
-	uint32_t ts = 0;
-	uint8_t b;
-	int byteCount = 0;
-
-	while(1)
-	{
-		if(!f.readByte(&b))
-			return -1;
-
-		byteCount++;
-
-		ts <<= 7;
-		ts |= (b & 0x7F);
-
-		if(0 == (b & 0x80))
-			break;
-	}
-	*result = ts;
-	return byteCount;
-}
-
-int MIDIMessage::load(File &f, MIDIFile &m)
-{
-	uint8_t lastMsg = 0;
-	uint8_t b;
-	int byteCount = 0;
-
-	// First read a timestamp.
-	byteCount = loadTimestamp(&_ts, f);
-	if(byteCount < 0)
-		return byteCount;
-	
-	// Then read the MIDI event.
-	while(1)
-	{
-		if(!f.readByte(&b))
-			return -1;
-		
-		byteCount++;
-		
-		// 0xFF has special meaning in a MID file. It indicates a meta-event
-		if(b == 0xFF)
-		{
-			// Skip over meta-event.
-			uint8_t buf[256];
-			if(!f.read(buf, 2))
-				return -1;
-			
-			byteCount += 2;
-			
-			int meta = buf[0];
-			int len = buf[1];
-			if(len > 0)
-			{
-				if(!f.read(buf, len))
-					return -1;
-				
-				byteCount += len;
-			}
-			
-			// Some meta events we recognise.
-			switch(meta)
-			{
-			case META_TEMPO:
-				m.setTempo(60000000 / ((buf[0] << 16) | (buf[1] << 8) | buf[2]));
-				break;
-
-			case META_TIME_SIGNATURE:
-				m.setTimeSignature(buf[0], 1 << buf[1]);
-				break;
-			}
-			break;
-		}
-		else
-		{
-			if(decodeByte(lastMsg, b))
-				break;
-		}
-	}
-	
-	return byteCount;
-}
 
 // Returns a number from 0..11 (ie. strips off the octave) so you know
 // what note this is.
