@@ -182,7 +182,7 @@ COMMONFLAGS += -mfloat-abi=hard -mfpu=fpv5-sp-d16
 
 # Debug and optimization flags.
 #DEBUGFLAGS = -D__DEBUG -g -O0
-DEBUGFLAGS = -g -O0
+DEBUGFLAGS = -g3 -O0
 RELEASEFLAGS = -O3 -g0
 
 # Additional compiler flags for C

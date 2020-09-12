@@ -7,6 +7,7 @@
 // **
 // *****************************************************************************
 
+#include "MIDI.h"
 #include "MIDITrack.h"
 #include "MIDIFile.h"
 //#include "MIDI.h"
@@ -31,10 +32,8 @@ MIDITrack::MIDITrack()
 	: _event(0)
 	, _numEvents(0)
 	, _trackLength(0)
-#ifdef OLD
 	, _currentEvent(0)
 	, _currentTime(0)
-#endif // OLD
 	, _channelMap(0)
 {
 }
@@ -192,20 +191,14 @@ void MIDITrack::changeTimebase(unsigned mul, unsigned div)
 	_trackLength *= mul;
 	_trackLength /= div;
 }
+#endif // OLD
 
 // Find all events that need to be actioned at the current time.
 // If midiOut is NULL, it will still advance counters and whatever
 // but will not sound any MIDI events.
 // Returns true if the track has looped.
-// TODO: There's a possibility that this could miss some events near the end if the timer
-//       loops around before exec() is called. Maybe this class needs to have it's own
-//       timing and not use the MIDITimer class or maybe there needs to be a "hasLooped" flag.
-void MIDITrack::exec(MIDI *midiOut, AccompState &accomp, unsigned currentTime)
+void MIDITrack::exec(MIDISink *midiOut, AccompState &accomp, unsigned currentTime)
 {
-	// In mode-1 MIDI files, track zero often has no playable events.
-	if(_numEvents == 0)
-		return;
-
 	// If the timer has looped, play any remaining events to the end of the track.
 	if(currentTime < _currentTime)
 	{
@@ -224,14 +217,15 @@ void MIDITrack::exec(MIDI *midiOut, AccompState &accomp, unsigned currentTime)
 	// Find and play all events that should be played at the current time.
 	while(_currentEvent < _numEvents)
 	{
-		MIDIMessage &msg = _event[_currentEvent];
-		unsigned t = _currentTime + msg.getDeltaTime();
+		MIDIEvent &evt = _event[_currentEvent];
+		unsigned t = _currentTime + evt.getDeltaTime();
 
 		if(t > currentTime)
 			break;
 
-		if(midiOut != 0)
-			midiOut->sendTransposed(msg, accomp);
+		if(midiOut != 0) {
+			midiOut->sendTransposed(evt, accomp);
+		}
 
 		_currentEvent++;
 		_currentTime = t;
@@ -239,15 +233,10 @@ void MIDITrack::exec(MIDI *midiOut, AccompState &accomp, unsigned currentTime)
 }
 
 // Issue note-off events for all channels used by this track.
-void MIDITrack::stop(MIDI *midiOut)
+void MIDITrack::stop(MIDISink *midiOut)
 {
-	for(unsigned channel = 0; channel < 16; channel++)
-	{
-		if(0 != ((1 << channel) & _channelMap))
-			midiOut->allNotesOff(channel & 15);
-	}
+	allNotesOff(midiOut);
 }
-#endif // OLD
 
 void MIDITrack::rewind()
 {
@@ -279,22 +268,25 @@ void MIDITrack::findSetupMessages()
 		}
 	}
 }
+#endif // OLD
 
 // Send note-off commands for all channes used by this track.
-void MIDITrack::allNotesOff(MIDI *midiOut)
+void MIDITrack::allNotesOff(MIDISink *midiOut)
 {
-	for(unsigned i = 0; i < MIDI_NUM_CHANNELS; i++)
+	for(unsigned channel = 0; channel < MIDIMessage::kChannels; channel++)
 	{
-		if(0 != (_channelMap & (1 << i)))
-			midiOut->allNotesOff(i);
+		if(0 != ((1 << channel) & _channelMap))
+			midiOut->allNotesOff(channel);
 	}
 }
 
 // Load the program and control channel settings for this track.
-void MIDITrack::setupForPlayback(MIDI *midiOut)
+void MIDITrack::setupForPlayback(MIDISink *midiOut)
 {
 	allNotesOff(midiOut);
+#ifdef OLD
 	_setupMsg.replay(midiOut);
+#endif // OLD
 }
 
 // Seek to the given position.
@@ -311,5 +303,3 @@ void MIDITrack::jumpTo(unsigned t)
 		_currentTime = tNext;
 	}
 }
-
-#endif // OLD

@@ -48,7 +48,7 @@
 
 // Audio uses a lot of interrupts pretty heavily so if I want
 // to debug something else, it is handy to turn it off temporarily.
-//#define ENABLE_AUDIO
+#define ENABLE_AUDIO
 
 // #define WAV_TEST_FILENAME "/Minimal Heaven vol. 1/LS-MH1 Laser Sweep 10.wav"
 #define WAV_TEST_FILENAME "/Large FX Collection/LS LFXC Short-Sound 022.wav"
@@ -92,6 +92,7 @@ void fnDrumStartStop(unsigned tag)
 	if(g_mid->isPlaying()) {
 		g_mid->stop(g_synth);
 	} else {
+		g_mid->rewind();
 		g_mid->start(g_synth);
 	}
 }
@@ -121,7 +122,9 @@ void fnDrumStartStop(unsigned tag)
 
 void fnPatch(unsigned tag)
 {
-	g_synth->setProgram(0, tag);
+	//static unsigned drumpatch[] = { 0, 16, 24, 25, 32, 40, 48, 64 };
+	//g_synth->setProgram(MIDIMessage::CHANNEL10, drumpatch[tag]);
+	g_synth->setProgram(MIDIMessage::CHANNEL1, tag);
 	//g_synth->replaceSF(PATCHFILE[tag]);
 }
 
@@ -217,7 +220,16 @@ int main()
 #endif // ENABLE_AUDIO
 
     // Keyboard
-    const unsigned NOTENUM[] = { 60, 62, 64, 65, 67, 69, 71, 72 };
+    const unsigned NOTENUM[] = {
+    	MIDIMessage::C3,
+		MIDIMessage::D3,
+		MIDIMessage::E3,
+		MIDIMessage::F3,
+		MIDIMessage::G3,
+		MIDIMessage::A3,
+		MIDIMessage::B3,
+		MIDIMessage::C4
+    };
     const char *KEYNAME[] = { "C","D","E","F","G","A","B","C" };
     for(int i = 0, x = 0; i < 8; i++) {
     	gui->add(new Gui::Button(Gui::Rect(x, 66, 55, 50), KEYNAME[i], &fnKbPress, &fnKbRelease, NOTENUM[i]));
@@ -238,6 +250,7 @@ int main()
 
     // TEST: Load a MIDI file.
     MIDIFile midiFile;
+    AccompState accomp;
     if(midiFile.load("/testMidi.mid")) {
     	printf("Loaded MIDI file OK.\r\n");
     	g_mid = &midiFile;
@@ -246,9 +259,14 @@ int main()
     }
 
     // Create button to start/stop drum pattern.
-    gui->add(new Gui::Button(Gui::Rect(10, 10, 146, 30), "START", &fnDrumStartStop));
+    gui->add(new Gui::Button(Gui::Rect(10, 10, 146, 30), "START", 0, &fnDrumStartStop));
 
     uint32_t _tLastPerfUpdate = 0;
+
+    Gui::Label beatDisplay(Gui::Rect(170, 40, 100, 25), "BEAT");
+    gui->add(&beatDisplay);
+
+    int lastBeat = 0;
 
     // Main loop
     while(1)
@@ -259,6 +277,18 @@ int main()
 		// There doesn't seem to be any kind of USB disconnect event
 		// so I have to poll for USB disconnect.
 		sdCardPoll();
+
+		// Do MIDI playback stuff.
+		if(g_mid->isPlaying())
+			g_mid->exec(g_synth, accomp);
+
+		char buf[80];
+		int beat = midiFile.getBeat();
+		if(beat != lastBeat) {
+			lastBeat = beat;
+			sprintf(buf, "%03d-%d", midiFile.getBar() + 1, beat + 1);
+			beatDisplay.setText(buf);
+		}
 
     	/*
     	// Display audio level graph.

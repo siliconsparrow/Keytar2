@@ -24,9 +24,7 @@
 #define MIDITIMER_IRQN       TIM5_IRQn
 #define MIDITIMER_HANDLER    TIM5_IRQHandler
 #define MIDITIMER_RCC_ENABLE __HAL_RCC_TIM5_CLK_ENABLE
-
-#ifdef OLD
-#endif // OLD
+#define MIDITIMER_DBG_FREEZE __HAL_DBGMCU_FREEZE_TIM5
 
 // Erk, globals!
 static std::vector<MIDITimer*> g_timers; // List of timer objects to be notified each tick.
@@ -59,10 +57,10 @@ extern "C" void MIDITIMER_HANDLER()
 MIDITimer::MIDITimer()
 	: _tickCount(0)
 	, _loopPoint(kTimerNoLoop)
+	, _beatCount(0)
+	, _beat(0)
+	, _bar(0)
 //	, _hasLooped(false)
-//	, _beat(0)
-//	, _bar(0)
-//	, _beatCount(0)
 {
 	static bool g_hwInit = false;
 
@@ -105,6 +103,7 @@ void MIDITimer::timerInit()
 {
 	// Activate the timer.
 	MIDITIMER_RCC_ENABLE();
+	MIDITIMER_DBG_FREEZE();
 
 	// Compute the prescaler value
 	uint32_t uwPrescalerValue = (uint32_t) ((SystemCoreClock / 2) / MIDITIMER_FREQ) - 1;
@@ -152,25 +151,24 @@ void MIDITimer::tick()
 	{
 		//_hasLooped = true;
 		_tickCount = 0;
-		//_bar = 0;
-		//_beat = 0;
-		//_beatCount = 0;
+		_bar = 0;
+		_beat = 0;
+		_beatCount = 0;
 	}
 
-//	_beatCount++;
-//	if(_beatCount >= MIDI_TICKS_PER_BEAT)
-//	{
-//		_beat++;
-//		_beatCount = 0;
-//		if(_beat >= g_beatsPerBar)
-//		{
-//			_beat = 0;
-//			_bar++;
-//		}
-//	}
+	_beatCount++;
+	if(_beatCount >= kDefaultTicksPerBeat)
+	{
+		_beat++;
+		_beatCount = 0;
+		if(_beat >= g_beatsPerBar)
+		{
+			_beat = 0;
+			_bar++;
+		}
+	}
 }
 
-#ifdef OLD
 // Get the current tick count.
 unsigned MIDITimer::getCurrentTime() const
 {
@@ -180,19 +178,22 @@ unsigned MIDITimer::getCurrentTime() const
 void MIDITimer::setCurrentTime(unsigned t)
 {
 	_tickCount = t % _loopPoint;
+#ifdef OLD
 	_hasLooped = false;
+#endif // OLD
 }
 
 // Set current time counter to zero.
 void MIDITimer::resetTime()
 {
+#ifdef OLD
 	_hasLooped = false;
+#endif // OLD
 	_tickCount = 0;
 	_bar = 0;
 	_beat = 0;
 	_beatCount = 0;
 }
-#endif // OLD
 
 // Set up for looping or pass MIDITIMER_NO_LOOP for no looping.
 void MIDITimer::setLoopPoint(unsigned lp)

@@ -48,15 +48,15 @@ public:
 	void     setTempo(unsigned tempo)                       { _tempo = tempo; }
 	void     setTimeSignature(unsigned num, unsigned denom) { _timesigNum = num; _timesigDenom = denom; }
 
-	bool     isPlaying() const;
+	bool     isPlaying() const { return _isPlaying; }
 	void     rewind();
 	void     stop(MIDISink *midiOut);
 	void     start(MIDISink *midiOut, unsigned timestamp = 0);
-#ifdef OLD
 	bool     exec(MIDISink *midiOut, AccompState &accomp);
 	unsigned getBeat() const { return _timer.getBeat(); }
 	unsigned getBar()  const { return _timer.getBar();  }
 
+#ifdef OLD
 	unsigned getTimestamp() const { return _timer.getCurrentTime(); }
 
 	//_timer.getCurrentTime()
@@ -74,6 +74,8 @@ private:
 	unsigned        _timesigDenom;
 	unsigned        _songLength;
 	MIDITimer       _timer;
+	bool            _isPlaying;
+	unsigned        _lastTick;
 };
 
 #endif // _MIDFILE_H_

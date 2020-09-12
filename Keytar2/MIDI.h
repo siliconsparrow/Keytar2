@@ -12,7 +12,7 @@
 
 //#include "UART.h"
 #include "MIDIMessage.h"
-//#include "Accompaniment.h"
+#include "Accompaniment.h"
 
 // Base class that could send MIDI messages internally or via UART.
 
@@ -31,11 +31,13 @@ public:
 
 	virtual void send(const MIDIMessage &msg) = 0;
 
-#ifdef OLD
 	void         sendTransposed(MIDIMessage &msg, AccompState &accomp);
+#ifdef OLD
 	void         programChange(uint8_t channel, uint8_t pgm);
+#endif // OLD
 	void         controlChange(uint8_t channel, uint8_t cc, uint8_t value);
 	void         allNotesOff(uint8_t channel);
+#ifdef OLD
 	void         resetControllers(uint8_t channel);
 #endif // OLD
 };

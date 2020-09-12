@@ -15,11 +15,18 @@ class MIDITimer
 public:
 
 	enum {
-		kDefaultTicksPerBeat = 120, // 480 is the resolution used by the Kronos.
-		kDefaultTempo        = 120, // Tempo in beats per minute.
-		kDefaultTimeSigNum   = 4,
+		kDefaultTicksPerBeat = 120, // 480 is the resolution used by the Kronos. 120 is more standard.
+		kDefaultTempo        = 120, // Default tempo in beats per minute.
+		kDefaultTimeSigNum   = 4,   // Default time signature.
 		kDefaultTimeSigDenom = 4,
 		kTimerNoLoop         = 0xFFFFFFFF, // Token to prevent looping.
+	};
+
+	class Delegate
+	{
+	public:
+		virtual ~Delegate() { }
+		virtual void tick(unsigned currentTime) = 0;
 	};
 
 	MIDITimer();
@@ -29,33 +36,36 @@ public:
 	static void     setTimeSignature(unsigned num, unsigned denom);
 	static unsigned getBeatsPerBar();
 
-#ifdef OLD
 	void     setCurrentTime(unsigned t);
 	unsigned getCurrentTime() const;
 	void     resetTime();
-#endif // OLD
 	void     setLoopPoint(unsigned lp);
 #ifdef OLD
 	unsigned getLoopPoint() const { return _loopPoint; }
 
 	bool     hasLooped() const { return _hasLooped; }
 	void     hasLoopedAck() { _hasLooped = false; }
+#endif // OLD
 
 	unsigned getBeat() const { return _beat; }
 	unsigned getBar()  const { return _bar;  }
 
 	//void addToNotificationList();
 
-#endif // OLD
+	void setDelegate(Delegate *delegate);
+	void start();
+	void stop();
 
 private:
 	volatile unsigned _tickCount;
 	volatile unsigned _loopPoint;
-#ifdef OLD
-	volatile bool     _hasLooped;
+	volatile unsigned _beatCount;
 	volatile unsigned _beat;
 	volatile unsigned _bar;
-	volatile unsigned _beatCount;
+	Delegate          *_delegate;
+
+#ifdef OLD
+	volatile bool     _hasLooped;
 
 	void removeFromNotificationList();
 #endif // OLD

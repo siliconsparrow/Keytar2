@@ -7,12 +7,10 @@
 // **
 // *****************************************************************************
 
-#ifdef OLD
-// TODO: Put this code on the M0 core
-// TODO: Some way (callback) for packets to trigger DSP sound output.
-
 #include "MIDI.h"
 #include "GeneralMIDI.h"
+
+#ifdef OLD
 
 #define MIDI_BIT_RATE 31250
 
@@ -100,9 +98,11 @@ void MIDI::send(const MIDIMessage &msg)
 	else
 		_uart.send(data, msg.dataLength());
 }
+#endif // OLD
 
-void MIDI::sendTransposed(MIDIMessage &msg, AccompState &accomp)
+void MIDISink::sendTransposed(MIDIMessage &msg, AccompState &accomp)
 {
+#ifdef OLD
 	// Get the transposed data from the message.
 	uint8_t data[MIDI_MESSAGE_MAX_SIZE];
 	if(!accomp.filterMessage(data, msg))
@@ -113,8 +113,13 @@ void MIDI::sendTransposed(MIDIMessage &msg, AccompState &accomp)
 		_uart.send(&data[1], msg.dataLength() - 1);
 	else
 		_uart.send(data, msg.dataLength());
+
+#endif // OLD
+
+	send(msg);
 }
 
+#ifdef OLD
 /*
 // Sends a MIDI clock pulse.
 void MIDI::sendClock()
@@ -142,30 +147,20 @@ void MIDI::programChange(uint8_t channel, uint8_t pgm)
 	MIDIMessage m(0, MIDIMessage::PROGRAM_CHANGE, channel, pgm);
 	send(m);
 }
+#endif // OLD
 
-void MIDI::controlChange(uint8_t channel, uint8_t cc, uint8_t value)
+void MIDISink::controlChange(uint8_t channel, uint8_t cc, uint8_t value)
 {
-	MIDIMessage m(0, MIDIMessage::CONTROL_CHANGE, channel, cc, value);
+	MIDIMessage m(MIDIMessage::CONTROL_CHANGE, channel, cc, value);
 	send(m);
 }
-/*
-void MIDI::allOff()
-{
-	controlChange(0, GM_CC_ALL_NOTES_OFF, 0);
-	controlChange(0, GM_CC_ALL_CONTROLLERS_OFF, 0);
-}
 
-void MIDI::allNotesOff()
-{
-	controlChange(0, GM_CC_ALL_NOTES_OFF, 0);
-}
-*/
-
-void MIDI::allNotesOff(uint8_t channel)
+void MIDISink::allNotesOff(uint8_t channel)
 {
 	controlChange(channel, GM_CC_ALL_NOTES_OFF, 0);
 }
 
+#ifdef OLD
 void MIDI::resetControllers(uint8_t channel)
 {
 	controlChange(channel, GM_CC_ALL_CONTROLLERS_OFF, 0);

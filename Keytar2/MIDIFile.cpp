@@ -39,6 +39,8 @@ MIDIFile::MIDIFile()
 	, _timesigNum(MIDITimer::kDefaultTimeSigNum)
 	, _timesigDenom(MIDITimer::kDefaultTimeSigDenom)
 	, _songLength(0)
+	, _isPlaying(false)
+	, _lastTick(0)
 {
 }
 
@@ -139,64 +141,65 @@ unsigned MIDIFile::getTicksPerBar() const
 	return (_ticksPerCrotchet * 4 * _timesigNum) / _timesigDenom;
 }
 
-bool MIDIFile::isPlaying() const
-{
-	// TODO: Implement me!
-	return false;
-}
-
 // Rewind all tracks to the start.
 void MIDIFile::rewind()
 {
-#ifdef OLD
 	_timer.resetTime();
 	for(unsigned i = 0; i < _numTracks; i++)
 		_track[i].rewind();
-#endif // OLD
 }
 
 // Send note-off commands and stop all playback.
 void MIDIFile::stop(MIDISink *midiOut)
 {
-#ifdef OLD
+	_isPlaying = false;
 	for(unsigned i = 0; i < _numTracks; i++)
 		_track[i].stop(midiOut);
-#endif // OLD
 }
 
 // Prepare tracks for playback starting from the given timestamp.
 void MIDIFile::start(MIDISink *midiOut, unsigned timestamp)
 {
-#ifdef OLD
+	_isPlaying = true;
+
 	_timer.setCurrentTime(timestamp);
+	_lastTick = 0xFFFFFFFF;
 
 	for(unsigned i = 0; i < _numTracks; i++)
 	{
 		_track[i].setupForPlayback(midiOut);
 		_track[i].jumpTo(_timer.getCurrentTime());
 	}
-#endif // OLD
 }
 
-#ifdef OLD
 // Play any events that need to happen at the current time.
 // Returns true if the song has looped.
-bool MIDIFile::exec(MIDI *midiOut, AccompState &accomp)
+// TODO: Really needs to be interrupt-driven but polled is OK for now.
+bool MIDIFile::exec(MIDISink *midiOut, AccompState &accomp)
 {
+	unsigned tNow = _timer.getCurrentTime();
+	if(_lastTick == tNow)
+		return false;
+
+	_lastTick = tNow;
+
 	for(unsigned i = 0; i < _numTracks; i++)
 	{
-		_track[i].exec(midiOut, accomp, _timer.getCurrentTime());
+		_track[i].exec(midiOut, accomp, tNow);
 	}
 
+#ifdef OLD
 	if(_timer.hasLooped())
 	{
 		_timer.hasLoopedAck();
 		return true;
 	}
+#endif // OLD
 
 	return false;
 }
 
+#ifdef OLD
 //// Return the given track or 0 if there is no such track.
 //MIDITrack *MIDIFile::getTrack(unsigned trackNum) const
 //{

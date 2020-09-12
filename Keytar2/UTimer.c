@@ -18,6 +18,7 @@ void uTimerInit()
 {
 	// Activate the timer.
 	__HAL_RCC_TIM4_CLK_ENABLE();
+	__HAL_DBGMCU_FREEZE_TIM4();
 
 	// Compute the prescaler value
 	uint32_t uwPrescalerValue = (uint32_t) ((SystemCoreClock / 2) / UTIMER_FREQ) - 1;
