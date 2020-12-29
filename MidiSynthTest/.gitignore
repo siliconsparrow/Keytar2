@@ -1,0 +1,10 @@
+*.pyc
+.bin/
+*.a
+*.o
+*.bin
+*.elf
+*.lst
+*.swp
+tools/flash/st-flash
+tools/gdbserver/st-util
