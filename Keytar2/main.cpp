@@ -25,24 +25,28 @@
 // TODO: Make all interrupt priorities defined symbols, perhaps in hal_conf.h so
 //       I can adjust them to avoid deadlocks.
 
-#include "FilterSample.h"
-#include "platform.h"
+//#include "FilterSample.h"
+//#include "Audio.h"
+//#include "FilterMixer.h"
+//#include "FileSystem.h"
+//#include "FilterReverbFir.h"
+//#include "FilterVocoder.h"
+//#include "FilterWavStream.h"
+//#include "FilterFluidSynth.h"
+//#include "PerfMeter.h"
+//#include "UTimer.h"
+//#include "MIDIFile.h"
+//#include "USBMidi.h"
+//#include <USBStorage/usbd_conf.h>
+#include "stm32746g_discovery_sdram.h"
 #include "Gui.h"
-#include "Audio.h"
-#include "FilterMixer.h"
-#include "FileSystem.h"
-#include "FilterReverbFir.h"
-#include "FilterVocoder.h"
-#include "FilterWavStream.h"
-#include "FilterFluidSynth.h"
-#include "usbd_conf.h"
+#include "platform.h"
 #include "PerfMon.h"
-#include "PerfMeter.h"
-#include "UTimer.h"
-#include "MIDIFile.h"
-#include <stdio.h>
+#include "MusicKeyboard.h"
 #include "main.h"
+#include <stdio.h>
 
+#ifdef OLD
 // TEST
 #include "ff_wrapper.h"
 
@@ -180,6 +184,9 @@ int main()
     	printf("USB init failed!\n");
     }
 
+    // Start up the USB MIDI host.
+    USBMidi *usbMidi = USBMidi::instance();
+
     FileSystem::instance(); // Mount the file system.
 
 #ifdef ENABLE_AUDIO
@@ -278,6 +285,9 @@ int main()
 		// so I have to poll for USB disconnect.
 		sdCardPoll();
 
+		// MIDI USB stuff
+		usbMidi->poll();
+
 		// Do MIDI playback stuff.
 		if(g_mid->isPlaying())
 			g_mid->exec(g_synth, accomp);
@@ -303,5 +313,48 @@ int main()
 
 		meterAudio.setValue(max >> 8);
     	 */
+    }
+}
+#endif // OLD
+
+int main()
+{
+	// Set up CPU core.
+    MPU_Config();
+    CPU_CACHE_Enable();
+
+    // Set up HAL library:
+    //  - Flash ART accelerator on ITCM interface
+    //  - Systick to generate an interrupt each 1 msec
+    //  - Set NVIC Group Priority to 4
+    //   - Low Level Initialization
+    uwTickFreq = HAL_TICK_FREQ_1KHZ;
+    HAL_Init();
+
+    // Set a faster core speed (216MHz)
+    SystemClock_Config();
+
+    // Activate the SDRAM so malloc() and new() will work.
+    BSP_SDRAM_Init();
+
+    // Set up process monitor.
+    perfInit();
+
+    // Set up screen and text rendering.
+    Gui::Gui *gui = Gui::Gui::instance();
+    printf(">> Sound Module Test With USB MIDI <<\n\n");
+
+    Gui::MusicKeyboard *keyboard = new Gui::MusicKeyboard(Gui::Rect(0, 100, 480, 100));
+    gui->add(keyboard);
+
+    //for(int i = 0; i < 100; i++)
+    //	printf("Scroll test %\n", i);
+
+    // Main loop
+    while(1) {
+
+    	// Check for touch events and update GUI objects on-screen.
+    	gui->tick();
+
     }
 }

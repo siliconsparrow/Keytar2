@@ -22,12 +22,25 @@ enum ProcessId {
 	nPids
 };
 
-extern const char *perfPidName[];
+//#define USE_PERFMON
 
-void     perfInit();
-void     perfEnter(unsigned pid);
-void     perfLeave();
-unsigned perfReport(unsigned *result);
+#ifdef USE_PERFMON
+
+	extern const char *perfPidName[];
+
+	void     perfInit();
+	void     perfEnter(unsigned pid);
+	void     perfLeave();
+	unsigned perfReport(unsigned *result);
+
+#else
+
+	#define perfInit()
+	#define perfEnter(x)
+	#define perfLeave()
+	unsigned perfReport(unsigned *result);
+
+#endif // USE_PERFMON
 
 #ifdef __cplusplus
 }

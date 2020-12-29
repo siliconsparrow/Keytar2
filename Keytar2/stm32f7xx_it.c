@@ -1,5 +1,7 @@
 #include "stm32f7xx_it.h"
-#include "PerfMon.h"
+//#include "PerfMon.h"
+
+#ifdef OLD
 
 /******************************************************************************/
 /*            Cortex-M7 Processor Exceptions Handlers                         */
@@ -115,17 +117,16 @@ void DebugMon_Handler(void)
 void PendSV_Handler(void)
 {
 }
+#endif // OLD
 
-/**
-  * @brief  This function handles SysTick Handler.
-  * @param  None
-  * @retval None
-  */
+
+// Called frequently by SysTick interrupt.
 void SysTick_Handler(void)
 {
   HAL_IncTick();
 }
-  
+
+#ifdef OLD
 /******************************************************************************/
 /*                 STM32F7xx Peripherals Interrupt Handlers                   */
 /*  Add here the Interrupt Handler for the used peripheral(s) (PPP), for the  */
@@ -224,3 +225,4 @@ void AUDIO_IN_SAIx_DMAx_IRQHandler(void)
 
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+#endif // OLD

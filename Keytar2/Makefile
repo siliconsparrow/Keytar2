@@ -30,29 +30,44 @@ DEFINES  = -DSTM32F746xx -DARM_MATH_CM7 -D__FPU_PRESENT=1
 SOURCES = \
 	startup_stm32f746xx.s \
 	system_stm32f7xx.c \
-	stm32f7xx_ll_sdmmc.c \
-	stm32f7xx_ll_usb.c \
+	stm32f7xx_ll_fmc.c \
 	stm32f7xx_hal.c \
 	stm32f7xx_hal_cortex.c \
-	stm32f7xx_hal_gpio.c \
 	stm32f7xx_hal_pwr_ex.c \
 	stm32f7xx_hal_rcc.c \
 	stm32f7xx_hal_rcc_ex.c \
+	stm32f7xx_hal_gpio.c \
+	stm32f7xx_hal_sdram.c \
 	stm32f7xx_hal_i2c.c \
 	stm32f7xx_hal_dma.c \
 	stm32f7xx_hal_dma2d.c \
+	stm32f7xx_hal_ltdc.c \
+	stm32746g_discovery.c \
+	stm32746g_discovery_sdram.c \
+	stm32746g_discovery_lcd.c \
+	stm32746g_discovery_ts.c \
+	ft5336.c \
+	tinycpp.cpp \
+	platform.cpp \
+	syscalls.cpp \
+	chipAlloc.c \
+	Gfx.cpp \
+	Label.cpp \
+	Button.cpp \
+	TextWindow.cpp \
+	MusicKeyboard.cpp \
+	Gui.cpp \
+	stm32f7xx_it.c \
+	main.cpp
+	
+#	stm32f7xx_ll_sdmmc.c \
+	stm32f7xx_ll_usb.c \
 	stm32f7xx_hal_sd.c \
 	stm32f7xx_hal_pcd.c \
 	stm32f7xx_hal_pcd_ex.c \
 	stm32f7xx_hal_sai.c \
 	stm32f7xx_hal_tim.c \
-	stm32f7xx_ll_fmc.c \
-	stm32f7xx_hal_sdram.c \
-	stm32f7xx_hal_ltdc.c \
-	stm32f7xx_it.c \
 	stm32746g_discovery_sd.c \
-	platform.cpp \
-	chipAlloc.c \
 	usbd_conf.c \
 	usbd_core.c \
 	usbd_desc.c \
@@ -63,12 +78,7 @@ SOURCES = \
 	usbd_msc_scsi.c \
 	usbd_msc_data.c \
 	usbd_storage.c \
-	ft5336.c \
 	wm8994.c \
-	stm32746g_discovery.c \
-	stm32746g_discovery_sdram.c \
-	stm32746g_discovery_lcd.c \
-	stm32746g_discovery_ts.c \
 	stm32746g_discovery_audio.c \
 	Systick.cpp \
 	Audio.cpp \
@@ -76,7 +86,6 @@ SOURCES = \
 	FilterMixer.cpp \
 	FilterFluidSynth.cpp \
 	AudioFormat.cpp \
-	Gui.cpp \
 	PerfMeter.cpp \
 	FileSystem.cpp \
 	MIDI.cpp \
@@ -92,8 +101,6 @@ SOURCES = \
 	syscall.c \
 	diskio.c \
 	crash.cpp \
-	syscalls.cpp \
-	tinycpp.cpp \
 	PerfMon.c \
 	UTimer.c \
 	arm_sin_f32.c \
@@ -113,7 +120,24 @@ SOURCES = \
 	fluid_chorus.c \
 	fluid_gen.c \
 	ff_wrapper.c \
-	main.cpp
+	usbh_core.c \
+	usbh_conf.c \
+	usbh_pipes.c \
+	usbh_ctlreq.c \
+	usbh_ioreq.c \
+	usbh_cdc.c \
+	stm32f7xx_hal_hcd.c \
+	USBMidi.cpp \
+
+#	usbh_midi_core.c \
+	usb_hcd.c \
+	usb_core.c \
+	usbh_stdreq.c \
+	usb_bsp.c \
+	usbh_ioreq.c \
+	usbh_hcs.c \
+	usbh_usr.c \
+
 
 #	FilterSample.cpp \
 	FilterVocoder.cpp \
@@ -133,7 +157,14 @@ VPATH = . \
 	$(SDK_PATH)/Middlewares/Third_Party/FatFs/src/option \
 	$(SDK_PATH)/Middlewares/ST/STM32_USB_Device_Library/Core/Src \
 	$(SDK_PATH)/Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Src \
-	lfluidsynth/src
+	$(SDK_PATH)/Middlewares/ST/STM32_USB_Host_Library/Core/Src \
+	$(SDK_PATH)/Middlewares/ST/STM32_USB_Host_Library/Class/CDC/Src \
+	lfluidsynth/src \
+	USBMidi \
+	USBStorage \
+	GUI
+
+
 	
 # Include paths
 INCLUDES = -I. \
@@ -147,7 +178,13 @@ INCLUDES = -I. \
 	-I$(SDK_PATH)/Middlewares/Third_Party/FatFs/src \
 	-I$(SDK_PATH)/Middlewares/ST/STM32_USB_Device_Library/Core/Inc \
 	-I$(SDK_PATH)/Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Inc \
-	-Ilfluidsynth/src
+	-I$(SDK_PATH)/Middlewares/ST/STM32_USB_Host_Library/Core/Inc \
+	-I$(SDK_PATH)/Middlewares/ST/STM32_USB_Host_Library/Class/CDC/Inc \
+	-Ilfluidsynth/src \
+	-IUSBMidi \
+	-IUSBStorage \
+	-IGUI
+
 
 # Additional libraries.
 LIBS =

@@ -1,8 +1,8 @@
 /**
   ******************************************************************************
-  * @file    USB_Device/MSC_Standalone/Inc/main.h 
+  * @file    USB_Host/CDC_Standalone/Inc/usbh_conf.h
   * @author  MCD Application Team
-  * @brief   Header for main.c module
+  * @brief   General low level driver configuration
   ******************************************************************************
   * @attention
   *
@@ -44,25 +44,72 @@
   */
   
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __MAIN_H
-#define __MAIN_H
+#ifndef __USBH_CONF_H
+#define __USBH_CONF_H
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f7xx_hal.h"
-#include "usbd_core.h"
-#include "usbd_msc.h"
-#include "stm32746g_discovery.h"
-#include "stm32746g_discovery_sd.h"
-#include "stm32746g_discovery_audio.h"
-#include "USBStorage/usbd_desc.h"
-#include "USBStorage/usbd_storage.h"
+#include "stm32f7xx.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 /* Exported types ------------------------------------------------------------*/
+#define USBH_MAX_NUM_ENDPOINTS                2
+#define USBH_MAX_NUM_INTERFACES               2
+#define USBH_MAX_NUM_CONFIGURATION            1
+#define USBH_MAX_NUM_SUPPORTED_CLASS          1
+#define USBH_KEEP_CFG_DESCRIPTOR              0
+#define USBH_MAX_SIZE_CONFIGURATION           0x200
+#define USBH_MAX_DATA_BUFFER                  0x200
+#define USBH_DEBUG_LEVEL                      2
+#define USBH_USE_OS                           0
+
+#ifndef UNUSED
+	#define UNUSED(X) (void)X
+#endif
+
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
-/* Exported functions ------------------------------------------------------- */
-//void Toggle_Leds(void);
+/* CMSIS OS macros */   
+#if (USBH_USE_OS == 1)
+  #include "cmsis_os.h"
+  #define   USBH_PROCESS_PRIO    osPriorityNormal
+#endif
 
-#endif /* __MAIN_H */
+/* Memory management macros */   
+#define USBH_malloc               malloc
+#define USBH_free                 free
+#define USBH_memset               memset
+#define USBH_memcpy               memcpy
+    
+/* DEBUG macros */   
+#if (USBH_DEBUG_LEVEL > 0)
+#define USBH_UsrLog(...)   printf(__VA_ARGS__);\
+                           printf("\n");
+#else
+#define USBH_UsrLog(...)   
+#endif 
+                            
+                            
+#if (USBH_DEBUG_LEVEL > 1)
+
+#define USBH_ErrLog(...)   printf("ERROR: ") ;\
+                           printf(__VA_ARGS__);\
+                           printf("\n");
+#else
+#define USBH_ErrLog(...)   
+#endif 
+                                                      
+#if (USBH_DEBUG_LEVEL > 2)                         
+#define USBH_DbgLog(...)   printf("DEBUG : ") ;\
+                           printf(__VA_ARGS__);\
+                           printf("\n");
+#else
+#define USBH_DbgLog(...)                         
+#endif
+
+/* Exported functions ------------------------------------------------------- */
+
+#endif /* __USBH_CONF_H */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
