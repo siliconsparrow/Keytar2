@@ -1,5 +1,5 @@
 /*
- * Gui.h
+ * Gui.h - Manage screen and UI events.
  *
  *  Created on: 29 Mar 2020
  *      Author: adam
@@ -15,32 +15,6 @@
 
 namespace Gui
 {
-#ifdef OLD
-
-	// *******************************************
-	// ** Simple VU meter.
-
-	class Meter
-	    : public Obj
-	{
-	public:
-		Meter(const Rect &pos);
-		virtual ~Meter() { }
-
-		virtual void draw(Gfx &gfx);
-
-		void setValue(unsigned v);
-
-	private:
-		unsigned _value;
-	};
-
-
-#endif // OLD
-
-	// *******************************************
-	// ** Manage screen and UI events.
-
 	class Gui
 	{
 	public:
@@ -52,21 +26,13 @@ namespace Gui
 
 		void add(Obj *obj);
 
-#ifdef OLD
-		void redrawAll();
-#endif // OLD
-
-		PIXEL *getFrameBuffer() const { return _frameBuffer; }
-
 	private:
 		enum {
-			kLcdWidth = 480,
-			kLcdHeight = 272,
+			kConsoleHeight = 72,
 			kMaxObjects = 50,
 			kBlinkTimeMs = 500
 		};
 
-		PIXEL      *_frameBuffer;
 		Rect        _screen;
 		TextWindow  _console;
 		unsigned    _nObj;

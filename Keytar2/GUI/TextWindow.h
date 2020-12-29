@@ -32,8 +32,7 @@ namespace Gui {
 
 		void cursNextChar(Gfx &gfx);
 		void cursNextLine(Gfx &gfx);
-		void scroll(Gfx &gfx, int y);
-		void clearLine(Gfx &gfx);
+		void scroll(Gfx &gfx);
 	};
 
 

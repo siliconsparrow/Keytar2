@@ -51,6 +51,7 @@ SOURCES = \
 	platform.cpp \
 	syscalls.cpp \
 	chipAlloc.c \
+	Screen.cpp \
 	Gfx.cpp \
 	Label.cpp \
 	Button.cpp \

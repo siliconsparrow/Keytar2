@@ -342,13 +342,13 @@ int main()
 
     // Set up screen and text rendering.
     Gui::Gui *gui = Gui::Gui::instance();
-    printf(">> Sound Module Test With USB MIDI <<\n\n");
+    printf(">> Sound Module Test With USB MIDI <<\n");
 
     Gui::MusicKeyboard *keyboard = new Gui::MusicKeyboard(Gui::Rect(0, 100, 480, 100));
     gui->add(keyboard);
 
-    //for(int i = 0; i < 100; i++)
-    //	printf("Scroll test %\n", i);
+    for(int i = 0; i < 100; i++)
+    	printf("Scroll test %d\n", i);
 
     // Main loop
     while(1) {

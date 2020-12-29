@@ -13,8 +13,6 @@
 
 namespace Gui
 {
-	typedef uint32_t PIXEL;
-
 	class Gfx
 	{
 	public:
@@ -73,11 +71,11 @@ namespace Gui
 		void fillRect(const Rect &r);
 		void clearRect(const Rect &r);
 		void clear();
+		void blt(int dstX, int dstY, const Rect &src);
 
 		const Rect &getRect()        const { return _r; }
 		int         getWidth()       const { return _r.getWidth(); }
 		int         getHeight()      const { return _r.getHeight(); }
-		PIXEL      *getFrameBuffer() const;
 
 	private:
 		const Rect _r;
