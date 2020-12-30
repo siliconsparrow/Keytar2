@@ -54,9 +54,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-//#define USE_USB_HS 1
-
-
 /* Exported types ------------------------------------------------------------*/
 #define USBH_MAX_NUM_ENDPOINTS                10
 #define USBH_MAX_NUM_INTERFACES               10

@@ -20,9 +20,9 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
+#include "../../../../../../USBStorage/usbd_conf.h"
+#include "../../../../../../USBStorage/usbd_desc.h"
 #include "usbd_core.h"
-#include "usbd_desc.h"
-#include "usbd_conf.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -184,8 +184,8 @@ HIBYTE(USBD_VID),                    /* wSVID[0]: Standard or Vendor ID. This sh
 
 0x00,                                /* bAlternateMode[0] Index of the Alternate Mode within the SVID as
                                         returned in response to a Discover Modes command. Example:
-                                        0 – first Mode entry
-                                        1 – second mode entry */
+                                        0 ï¿½ first Mode entry
+                                        1 ï¿½ second mode entry */
 
 USBD_BB_ALTMODE0_STRING_INDEX,           /* iAlternateModeString[0]: Index of string descriptor describing protocol.
                                         It is optional to support this string. */
@@ -195,8 +195,8 @@ HIBYTE(USBD_VID),                    /* wSVID[1]: Standard or Vendor ID. This sh
 
 0x01,                                /* bAlternateMode[1] Index of the Alternate Mode within the SVID as
                                         returned in response to a Discover Modes command. Example:
-                                        0 – first Mode entry
-                                        1 – second Mode entry */
+                                        0 ï¿½ first Mode entry
+                                        1 ï¿½ second Mode entry */
 
 USBD_BB_ALTMODE1_STRING_INDEX,           /* iAlternateModeString[1]: Index of string descriptor describing protocol.
                                         It is optional to support this string. */

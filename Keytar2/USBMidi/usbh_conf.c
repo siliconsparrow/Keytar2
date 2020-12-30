@@ -254,7 +254,7 @@ void HAL_HCD_HC_NotifyURBChange_Callback(HCD_HandleTypeDef *hhcd, uint8_t chnum,
   */
 USBH_StatusTypeDef USBH_LL_Init(USBH_HandleTypeDef *phost)
 {
-#ifdef USE_USB_FS  
+#ifdef USE_USBH_FS
   /* Set the LL driver parameters */
   hhcd.Instance = USB_OTG_FS;
   hhcd.Init.Host_channels = 11; 
@@ -272,7 +272,7 @@ USBH_StatusTypeDef USBH_LL_Init(USBH_HandleTypeDef *phost)
   /* Initialize the LL Driver */
   HAL_HCD_Init(&hhcd);
 #endif 
-#ifdef USE_USB_HS  
+#ifdef USE_USBH_HS
   /* Set the LL driver parameters */
   hhcd.Instance = USB_OTG_HS;
   hhcd.Init.Host_channels = 11; 
@@ -289,7 +289,7 @@ USBH_StatusTypeDef USBH_LL_Init(USBH_HandleTypeDef *phost)
   phost->pData = &hhcd;
   /* Initialize the LL driver */
   HAL_HCD_Init(&hhcd);
-#endif /*USE_USB_HS*/ 
+#endif /*USE_USBH_HS*/
 
   USBH_LL_SetTimer(phost, HAL_HCD_GetCurrentFrame(&hhcd));
   
@@ -499,7 +499,7 @@ USBH_URBStateTypeDef USBH_LL_GetURBState(USBH_HandleTypeDef *phost, uint8_t pipe
   */
 USBH_StatusTypeDef USBH_LL_DriverVBUS(USBH_HandleTypeDef *phost, uint8_t state)
 {
-#ifdef USE_USB_FS
+#ifdef USE_USBH_FS
   if(state == 0)
   {
     HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5, GPIO_PIN_SET);
@@ -510,7 +510,7 @@ USBH_StatusTypeDef USBH_LL_DriverVBUS(USBH_HandleTypeDef *phost, uint8_t state)
   }
   
   HAL_Delay(200);
-#endif /* USE_USB_FS */
+#endif /* USE_USBH_FS */
   return USBH_OK;  
 }
 

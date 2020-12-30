@@ -45,6 +45,7 @@
 #include "PerfMon.h"
 #include "MusicKeyboard.h"
 #include "USBMidi.h"
+#include "USBStorage.h"
 #include "FileSystem.h"
 #include "Synth.h"
 #include "main.h"
@@ -363,20 +364,22 @@ int main()
     // Set up the MIDI USB Host.
     USBMidi *usbMidi = USBMidi::instance();
 
+    // Set up USB Storage to access the SD Card.
+    USBStorage *usbStorage = USBStorage::instance();
+
     // The main object that runs everything.
     Synth synth;
     usbMidi->setDelegate(&synth);
 
     // An on-screen keyboard might be useful.
     gui->add(synth.createKeyboard(Gui::Rect(0, 100, 480, 100)));
-//    Gui::MusicKeyboard *keyboard = new Gui::MusicKeyboard(Gui::Rect(0, 100, 480, 100));
-//    gui->add(keyboard);
 
     // Main loop
     while(1) {
 
-    	// Check for USB MIDI events.
+    	// Check for USB events.
     	usbMidi->poll();
+    	usbStorage->poll();
 
     	// Check for touch events and update GUI objects on-screen.
     	gui->tick();

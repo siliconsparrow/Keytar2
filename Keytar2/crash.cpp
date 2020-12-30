@@ -11,12 +11,7 @@
 void crash(int code)
 {
 	SCB_Type *scb = SCB;
-
 	uint32_t hfsr = scb->HFSR;
-	//uint32_t mmfsr = scb->MMFSR;
-//	uint32_t bfsr = scb->BFSR;
-//	uint32_t ufsr = scb->UFSR;
-
 
 	while(1)
 		;
@@ -99,7 +94,7 @@ extern "C" {
 	void     CAN2_RX0_IRQHandler() { crash(74); }
 	void     CAN2_RX1_IRQHandler() { crash(75); }
 	void     CAN2_SCE_IRQHandler() { crash(76); }
-	void     OTG_FS_IRQHandler() { crash(77); }
+//	void     OTG_FS_IRQHandler() { crash(77); }
 	void     DMA2_Stream5_IRQHandler() { crash(78); }
 //	void     DMA2_Stream6_IRQHandler() { crash(79); }
 	void     DMA2_Stream7_IRQHandler() { crash(80); }

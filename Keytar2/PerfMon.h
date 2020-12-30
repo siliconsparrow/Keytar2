@@ -16,7 +16,8 @@ enum ProcessId {
 	pidIdle,
 	pidAudio,
 	pidGui,
-	pidUsb,
+	pidUsbH,
+	pidUsbD,
 	pidDisk,
 
 	nPids

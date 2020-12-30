@@ -31,8 +31,8 @@
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
-//#define USE_USB_FS
-#define USE_USB_HS
+#define USE_USBH_HS
+#define USE_USBD_FS
 
 /* ########################## Module Selection ############################## */
 /**

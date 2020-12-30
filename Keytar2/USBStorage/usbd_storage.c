@@ -44,9 +44,9 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
-#include "usbd_storage.h"
 #include "stm32746g_discovery_sd.h"
 #include <stdio.h>
+#include <USBStorage/usbd_storage.h>
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/

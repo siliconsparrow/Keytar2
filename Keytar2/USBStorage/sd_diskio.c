@@ -44,12 +44,12 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
-#include "ff_gen_drv.h"
-#include "sd_diskio.h"
+#include <USBStorage/sd_diskio.h>
+
 
 
 #define USE_DMA
-extern __IO uint32_t writestatus, readstatus;
+//extern __IO uint32_t writestatus, readstatus;
 
 
 /* Private typedef -----------------------------------------------------------*/
@@ -165,10 +165,10 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
                        (uint32_t) (sector),
                        count) == MSD_OK)
   {
-	    while (readstatus == 0)
-	    {
-	    }
-	    readstatus = 0;
+	    //while (readstatus == 0)
+	    //{
+	    //}
+	    //readstatus = 0;
 
 	while (BSP_SD_GetCardState() != SD_TRANSFER_OK)
 	{
@@ -211,10 +211,10 @@ DRESULT SD_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
                         count) == MSD_OK)
   {
 	    /* Wait for Tx Transfer completion */
-	    while (writestatus == 0)
-	    {
-	    }
-	    writestatus = 0;
+	    //while (writestatus == 0)
+	    //{
+	    //}
+	    //writestatus = 0;
 
 	    /* Wait until SD card is ready to use for new operation */
 	    while (BSP_SD_GetCardState() != SD_TRANSFER_OK)
