@@ -2,6 +2,7 @@
 #include "PerfMon.h"
 
 extern HCD_HandleTypeDef hhcd;
+extern SD_HandleTypeDef uSdHandle;
 
 #ifdef OLD
 
@@ -10,7 +11,6 @@ extern HCD_HandleTypeDef hhcd;
 /******************************************************************************/
 
 extern PCD_HandleTypeDef hpcd;
-extern SD_HandleTypeDef uSdHandle;
 
 /* SAI handler declared in "stm32746g_discovery_audio.c" file */
 extern SAI_HandleTypeDef haudio_out_sai;
@@ -167,8 +167,6 @@ void OTG_HS_IRQHandler(void)
 	perfLeave();
 }
 
-#ifdef OLD
-
 /**
   * @brief  This function handles SDMMC1 global interrupt request.
   * @param  None
@@ -205,6 +203,7 @@ void BSP_SDMMC_DMA_Rx_IRQHandler(void)
 	perfLeave();
 }
 
+#ifdef OLD
 /**
   * @brief This function handles DMA2 Stream 4 interrupt request.
   * @param None

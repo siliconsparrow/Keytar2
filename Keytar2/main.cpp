@@ -31,7 +31,6 @@
 //#include "FilterSample.h"
 //#include "Audio.h"
 //#include "FilterMixer.h"
-//#include "FileSystem.h"
 //#include "FilterReverbFir.h"
 //#include "FilterVocoder.h"
 //#include "FilterWavStream.h"
@@ -46,6 +45,7 @@
 #include "PerfMon.h"
 #include "MusicKeyboard.h"
 #include "USBMidi.h"
+#include "FileSystem.h"
 #include "Synth.h"
 #include "main.h"
 #include <stdio.h>
@@ -321,6 +321,11 @@ int main()
 }
 #endif // OLD
 
+void fnDirResult(FileSystem::DirEntry &entry)
+{
+	printf(" %s\n", entry.getName());
+}
+
 int main()
 {
 	// Set up CPU core.
@@ -347,6 +352,13 @@ int main()
     // Set up screen and text rendering.
     Gui::Gui *gui = Gui::Gui::instance();
     printf(">> Sound Module Test With USB MIDI <<\n");
+
+    // Set up SD card.
+    FileSystem *fs = FileSystem::instance();
+
+    // Test the SD card.
+    printf("SD Card file list:\n");
+    fs->readDir((const TCHAR *)"/",	(const TCHAR *)"*", &fnDirResult);
 
     // Set up the MIDI USB Host.
     USBMidi *usbMidi = USBMidi::instance();
