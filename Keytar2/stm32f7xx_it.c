@@ -1,5 +1,7 @@
 #include "stm32f7xx_it.h"
-//#include "PerfMon.h"
+#include "PerfMon.h"
+
+extern HCD_HandleTypeDef hhcd;
 
 #ifdef OLD
 
@@ -151,6 +153,7 @@ void SysTick_Handler(void)
 /**
   * @}
   */
+#endif // OLD
 
 #ifdef USE_USB_FS
 void OTG_FS_IRQHandler(void)
@@ -159,9 +162,12 @@ void OTG_HS_IRQHandler(void)
 #endif
 {
 	perfEnter(pidUsb);
-	HAL_PCD_IRQHandler(&hpcd);
+	HAL_HCD_IRQHandler(&hhcd);
+	//HAL_PCD_IRQHandler(&hpcd);
 	perfLeave();
 }
+
+#ifdef OLD
 
 /**
   * @brief  This function handles SDMMC1 global interrupt request.

@@ -1,74 +1,59 @@
 /*
  * USBMidi.h
  *
- *  Created on: 20 Sep 2020
+ *  Created on: 16 Nov 2020
  *      Author: adam
  */
 
-#ifndef USBMIDI_H_
-#define USBMIDI_H_
+#ifndef USBMIDI_USBMIDI_H_
+#define USBMIDI_USBMIDI_H_
 
 #include "usbh_def.h"
+#include "MIDIMessage.h"
+
+#define RX_BUFF_SIZE   64  /* Max Received data 64 bytes */
 
 class USBMidi
 {
 public:
+
+	class Delegate
+	{
+	public:
+		virtual ~Delegate() { }
+
+		virtual void usbMidiEvent(MIDIMessage msg) = 0;
+	};
+
 	static USBMidi *instance();
 
 	USBMidi();
 
+	void setDelegate(Delegate *delegate) { _delegate = delegate; }
 	void poll();
 
 private:
-	enum CDC_Demo_State {
-	  CDC_DEMO_IDLE = 0,
-	  CDC_DEMO_WAIT,
-	  CDC_DEMO_SEND,
-	  CDC_DEMO_RECEIVE,
+	enum STATE {
+		appStateIdle,
+		appStateStart,
+		appStateReady,
+		appStateRunning,
+		appStateDisconnect
 	};
 
-	enum CDC_Send_State {
-	  CDC_SEND_IDLE = 0,
-	  CDC_SEND_WAIT,
-	};
-
-	enum CDC_Receive_State {
-	  CDC_RECEIVE_IDLE = 0,
-	  CDC_RECEIVE_WAIT,
-	  CDC_RECEIVE_RECEIVE,
-	};
-
-	struct CDC_DEMO_StateMachine {
-	  __IO CDC_Demo_State          state;
-	  __IO CDC_Send_State          Send_state;
-	  __IO CDC_Receive_State       Receive_state;
-	  __IO uint8_t                 select;
-	  __IO uint8_t                 lock;
-	};
-
-	typedef enum {
-	  CDC_SELECT_MENU = 0,
-	  CDC_SELECT_FILE ,
-	  CDC_SELECT_CONFIG,
-	}CDC_DEMO_SelectMode;
-
-	typedef enum {
-	  APPLICATION_IDLE = 0,
-	  APPLICATION_START,
-	  APPLICATION_READY,
-	  APPLICATION_RUNNING,
-	  APPLICATION_DISCONNECT,
-	}CDC_ApplicationTypeDef;
-
+	Delegate           *_delegate;
 	USBH_HandleTypeDef hUSBHost;
-	CDC_ApplicationTypeDef Appli_state = APPLICATION_IDLE;
-	CDC_DEMO_StateMachine CdcDemo;
-
-
-	void userProcess(USBH_HandleTypeDef *phost, uint8_t id);
-	void CDC_MenuProcess();
+	STATE              _appState;
+	uint8_t            MIDI_RX_Buffer[RX_BUFF_SIZE]; // MIDI reception buffer
 
 	static void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id);
+
+	void setState(STATE newState);
+	void applicationPoll();
+	void processMidiMessage(uint32_t msg);
+
+public:
+	void recvdData();
 };
 
-#endif // USBMIDI_H_
+#endif // USBMIDI_USBMIDI_H_

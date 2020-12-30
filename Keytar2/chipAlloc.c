@@ -17,6 +17,8 @@
 #include <errno.h>
 #include <unistd.h>
 
+#define MALLOC_SRAM
+
 extern char _heap_start; // set by linker
 extern char _heap_end;   // set by linker
 
@@ -42,7 +44,13 @@ void *_sbrk(int incr)
 
 	return (void *)prev_heap_end;
 */
+#if defined(MALLOC_SRAM)
+	void *result = allocSRam(incr);
+#elif defined(MALLOC_SDRAM)
 	void *result = allocSDRam(incr);
+#else
+	#error "Must define either MALLOC_SRAM or MALLOC_SDRAM"
+#endif
 	if(result == 0)
 	{
 		errno = ENOMEM;

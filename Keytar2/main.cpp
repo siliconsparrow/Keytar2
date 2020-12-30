@@ -22,6 +22,9 @@
 //   Drum machine
 //   FFT
 
+// NOTE: I found the USB host stuff doesn't work if you allocate it's data into SDRAM
+//       so I currently have malloc() allocating from SRAM but there's only 240k of that.
+
 // TODO: Make all interrupt priorities defined symbols, perhaps in hal_conf.h so
 //       I can adjust them to avoid deadlocks.
 
@@ -36,13 +39,14 @@
 //#include "PerfMeter.h"
 //#include "UTimer.h"
 //#include "MIDIFile.h"
-//#include "USBMidi.h"
 //#include <USBStorage/usbd_conf.h>
 #include "stm32746g_discovery_sdram.h"
 #include "Gui.h"
 #include "platform.h"
 #include "PerfMon.h"
 #include "MusicKeyboard.h"
+#include "USBMidi.h"
+#include "Synth.h"
 #include "main.h"
 #include <stdio.h>
 
@@ -344,17 +348,25 @@ int main()
     Gui::Gui *gui = Gui::Gui::instance();
     printf(">> Sound Module Test With USB MIDI <<\n");
 
-    Gui::MusicKeyboard *keyboard = new Gui::MusicKeyboard(Gui::Rect(0, 100, 480, 100));
-    gui->add(keyboard);
+    // Set up the MIDI USB Host.
+    USBMidi *usbMidi = USBMidi::instance();
 
-    for(int i = 0; i < 100; i++)
-    	printf("Scroll test %d\n", i);
+    // The main object that runs everything.
+    Synth synth;
+    usbMidi->setDelegate(&synth);
+
+    // An on-screen keyboard might be useful.
+    gui->add(synth.createKeyboard(Gui::Rect(0, 100, 480, 100)));
+//    Gui::MusicKeyboard *keyboard = new Gui::MusicKeyboard(Gui::Rect(0, 100, 480, 100));
+//    gui->add(keyboard);
 
     // Main loop
     while(1) {
 
+    	// Check for USB MIDI events.
+    	usbMidi->poll();
+
     	// Check for touch events and update GUI objects on-screen.
     	gui->tick();
-
     }
 }

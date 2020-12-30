@@ -23,13 +23,16 @@
 #ifndef __STM32F7xx_HAL_CONF_H
 #define __STM32F7xx_HAL_CONF_H
 
+#include "stm32f746xx.h"
+
 #ifdef __cplusplus
  extern "C" {
 #endif
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
-#define USE_USB_FS
+//#define USE_USB_FS
+#define USE_USB_HS
 
 /* ########################## Module Selection ############################## */
 /**

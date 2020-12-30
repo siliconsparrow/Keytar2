@@ -126,7 +126,7 @@ namespace Gui
 		for(int i = 0; i < _nWhite; i++) {
 			KBKey &k = _rWhite[i];
 			if(isPressed(k.noteNum)) {
-				gfx.setColourFg(Gfx::kColourOrange);
+				gfx.setColourFg(Gfx::kColourRed);
 			} else {
 				gfx.setColourFg(Gfx::kColourWhite);
 			}
@@ -137,7 +137,7 @@ namespace Gui
 		for(int i = 0; i < _nBlack; i++) {
 			KBKey &k = _rBlack[i];
 			if(isPressed(k.noteNum)) {
-				gfx.setColourFg(Gfx::kColourOrange);
+				gfx.setColourFg(Gfx::kColourRed);
 			} else {
 				gfx.setColourFg(Gfx::kColourBlack);
 			}

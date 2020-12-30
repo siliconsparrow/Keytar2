@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    USB_Host/CDC_Standalone/Inc/usbh_conf.h
+  * @file    Audio/Audio_playback_and_record/Inc/usbh_conf.h
   * @author  MCD Application Team
   * @brief   General low level driver configuration
   ******************************************************************************
@@ -42,20 +42,24 @@
   *
   ******************************************************************************
   */
-  
+
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __USBH_CONF_H
 #define __USBH_CONF_H
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f7xx.h"
+#include "stm32f7xx_hal_def.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+//#define USE_USB_HS 1
+
+
 /* Exported types ------------------------------------------------------------*/
-#define USBH_MAX_NUM_ENDPOINTS                2
-#define USBH_MAX_NUM_INTERFACES               2
+#define USBH_MAX_NUM_ENDPOINTS                10
+#define USBH_MAX_NUM_INTERFACES               10
 #define USBH_MAX_NUM_CONFIGURATION            1
 #define USBH_MAX_NUM_SUPPORTED_CLASS          1
 #define USBH_KEEP_CFG_DESCRIPTOR              0
@@ -63,10 +67,6 @@
 #define USBH_MAX_DATA_BUFFER                  0x200
 #define USBH_DEBUG_LEVEL                      2
 #define USBH_USE_OS                           0
-
-#ifndef UNUSED
-	#define UNUSED(X) (void)X
-#endif
 
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
@@ -82,7 +82,8 @@
 #define USBH_memset               memset
 #define USBH_memcpy               memcpy
     
-/* DEBUG macros */   
+/* DEBUG macros */  
+   
 #if (USBH_DEBUG_LEVEL > 0)
 #define USBH_UsrLog(...)   printf(__VA_ARGS__);\
                            printf("\n");
@@ -99,7 +100,8 @@
 #else
 #define USBH_ErrLog(...)   
 #endif 
-                                                      
+                            
+                            
 #if (USBH_DEBUG_LEVEL > 2)                         
 #define USBH_DbgLog(...)   printf("DEBUG : ") ;\
                            printf(__VA_ARGS__);\

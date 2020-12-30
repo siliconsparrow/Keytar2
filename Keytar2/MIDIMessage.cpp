@@ -26,6 +26,19 @@ MIDIMessage::MIDIMessage(MESSAGE msg, uint8_t channel, uint8_t param1, uint8_t p
 {
 }
 
+MIDIMessage::MIDIMessage(const uint8_t *data)
+{
+	if(data[0] >= MIDIMessage::SYSTEM) {
+		_msg = data[0];
+		_chan = 0;
+	} else {
+		_msg = data[0] & 0xF0;
+		_chan = data[0] & 0x0F;
+	}
+	_param1 = data[1];
+	_param2 = data[2];
+}
+
 void MIDIMessage::set(uint8_t msg, uint8_t channel, uint8_t param1, uint8_t param2)
 {
 	_msg    = msg;

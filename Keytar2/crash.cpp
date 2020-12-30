@@ -5,21 +5,32 @@
  *      Author: adam
  */
 
+#include "platform.h"
+#include <stdint.h>
+
 void crash(int code)
 {
+	SCB_Type *scb = SCB;
+
+	uint32_t hfsr = scb->HFSR;
+	//uint32_t mmfsr = scb->MMFSR;
+//	uint32_t bfsr = scb->BFSR;
+//	uint32_t ufsr = scb->UFSR;
+
+
 	while(1)
 		;
 }
 
 extern "C" {
-//	void  NMI_Handler() { crash(1); }
-//	void  HardFault_Handler() { crash(2); }
-//	void  MemManage_Handler() { crash(3); }
-//	void  BusFault_Handler() { crash(4); }
-//	void  UsageFault_Handler() { crash(5); }
-//	void  SVC_Handler() { crash(6); }
-//	void  DebugMon_Handler() { crash(7); }
-//	void  PendSV_Handler() { crash(8); }
+	void  NMI_Handler() { crash(1); }
+	void  HardFault_Handler() { crash(2); }
+	void  MemManage_Handler() { crash(3); }
+	void  BusFault_Handler() { crash(4); }
+	void  UsageFault_Handler() { crash(5); }
+	void  SVC_Handler() { crash(6); }
+	void  DebugMon_Handler() { crash(7); }
+	void  PendSV_Handler() { crash(8); }
 //	void  SysTick_Handler() { crash(9); }
 	void     WWDG_IRQHandler() { crash(10); }
 	void     PVD_IRQHandler() { crash(11); }
@@ -51,7 +62,7 @@ extern "C" {
 	void     TIM1_CC_IRQHandler() { crash(37); }
 	void     TIM2_IRQHandler() { crash(38); }
 	void     TIM3_IRQHandler() { crash(39); }
-//	void     TIM4_IRQHandler() { crash(40); }
+	void     TIM4_IRQHandler() { crash(40); }
 	void     I2C1_EV_IRQHandler() { crash(41); }
 	void     I2C1_ER_IRQHandler() { crash(42); }
 	void     I2C2_EV_IRQHandler() { crash(43); }
@@ -70,8 +81,8 @@ extern "C" {
 	void     TIM8_CC_IRQHandler() { crash(56); }
 	void     DMA1_Stream7_IRQHandler() { crash(57); }
 	void     FMC_IRQHandler() { crash(58); }
-//	void     SDMMC1_IRQHandler() { crash(59); }
-//	void     TIM5_IRQHandler() { crash(60); }
+	void     SDMMC1_IRQHandler() { crash(59); }
+	void     TIM5_IRQHandler() { crash(60); }
 	void     SPI3_IRQHandler() { crash(61); }
 	void     UART4_IRQHandler() { crash(62); }
 	void     UART5_IRQHandler() { crash(63); }
@@ -80,25 +91,25 @@ extern "C" {
 	void     DMA2_Stream0_IRQHandler() { crash(66); }
 	void     DMA2_Stream1_IRQHandler() { crash(67); }
 	void     DMA2_Stream2_IRQHandler() { crash(68); }
-//	void     DMA2_Stream3_IRQHandler() { crash(69); }
-//	void     DMA2_Stream4_IRQHandler() { crash(70); }
+	void     DMA2_Stream3_IRQHandler() { crash(69); }
+	void     DMA2_Stream4_IRQHandler() { crash(70); }
 	void     ETH_IRQHandler() { crash(71); }
 	void     ETH_WKUP_IRQHandler() { crash(72); }
 	void     CAN2_TX_IRQHandler() { crash(73); }
 	void     CAN2_RX0_IRQHandler() { crash(74); }
 	void     CAN2_RX1_IRQHandler() { crash(75); }
 	void     CAN2_SCE_IRQHandler() { crash(76); }
-//	void     OTG_FS_IRQHandler() { crash(77); }
+	void     OTG_FS_IRQHandler() { crash(77); }
 	void     DMA2_Stream5_IRQHandler() { crash(78); }
-//	void     DMA2_Stream6_IRQHandler() { crash(79); }
-//	void     DMA2_Stream7_IRQHandler() { crash(80); }
+	void     DMA2_Stream6_IRQHandler() { crash(79); }
+	void     DMA2_Stream7_IRQHandler() { crash(80); }
 	void     USART6_IRQHandler() { crash(81); }
 	void     I2C3_EV_IRQHandler() { crash(82); }
 	void     I2C3_ER_IRQHandler() { crash(83); }
 	void     OTG_HS_EP1_OUT_IRQHandler() { crash(84); }
 	void     OTG_HS_EP1_IN_IRQHandler() { crash(85); }
 	void     OTG_HS_WKUP_IRQHandler() { crash(86); }
-	void     OTG_HS_IRQHandler() { crash(87); }
+//	void     OTG_HS_IRQHandler() { crash(87); }
 	void     DCMI_IRQHandler() { crash(88); }
 	void     RNG_IRQHandler() { crash(89); }
 	void     FPU_IRQHandler() { crash(90); }
@@ -119,6 +130,3 @@ extern "C" {
 	void     I2C4_ER_IRQHandler() { crash(105); }
 	void     SPDIF_RX_IRQHandler() { crash(106); }
 }
-
-
-

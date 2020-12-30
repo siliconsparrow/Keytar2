@@ -71,6 +71,7 @@ public:
 	};
 
 	MIDIMessage();
+	MIDIMessage(const uint8_t *data);
 	MIDIMessage(MESSAGE msg, uint8_t channel, uint8_t param1 = 0, uint8_t param2 = 0);
 
 	void set(uint8_t msg, uint8_t channel, uint8_t param1 = 0, uint8_t param2 = 0);

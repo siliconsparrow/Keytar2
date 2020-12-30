@@ -31,6 +31,7 @@ SOURCES = \
 	startup_stm32f746xx.s \
 	system_stm32f7xx.c \
 	stm32f7xx_ll_fmc.c \
+	stm32f7xx_ll_usb.c \
 	stm32f7xx_hal.c \
 	stm32f7xx_hal_cortex.c \
 	stm32f7xx_hal_pwr_ex.c \
@@ -42,15 +43,25 @@ SOURCES = \
 	stm32f7xx_hal_dma.c \
 	stm32f7xx_hal_dma2d.c \
 	stm32f7xx_hal_ltdc.c \
+	stm32f7xx_hal_hcd.c \
 	stm32746g_discovery.c \
 	stm32746g_discovery_sdram.c \
 	stm32746g_discovery_lcd.c \
 	stm32746g_discovery_ts.c \
 	ft5336.c \
 	tinycpp.cpp \
+	crash.cpp \
 	platform.cpp \
 	syscalls.cpp \
 	chipAlloc.c \
+	usbh_core.c \
+	usbh_pipes.c \
+	usbh_ctlreq.c \
+	usbh_ioreq.c \
+	usbh_conf.c \
+	usbh_MIDI.c \
+	USBMidi.cpp \
+	MIDIMessage.cpp \
 	Screen.cpp \
 	Gfx.cpp \
 	Label.cpp \
@@ -58,11 +69,11 @@ SOURCES = \
 	TextWindow.cpp \
 	MusicKeyboard.cpp \
 	Gui.cpp \
+	Synth.cpp \
 	stm32f7xx_it.c \
 	main.cpp
 	
 #	stm32f7xx_ll_sdmmc.c \
-	stm32f7xx_ll_usb.c \
 	stm32f7xx_hal_sd.c \
 	stm32f7xx_hal_pcd.c \
 	stm32f7xx_hal_pcd_ex.c \
