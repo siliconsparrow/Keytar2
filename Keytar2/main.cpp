@@ -38,7 +38,6 @@
 //#include "PerfMeter.h"
 //#include "UTimer.h"
 //#include "MIDIFile.h"
-//#include <USBStorage/usbd_conf.h>
 #include "stm32746g_discovery_sdram.h"
 #include "Gui.h"
 #include "platform.h"
@@ -138,62 +137,8 @@ void fnPatch(unsigned tag)
 }
 
 
-// The SD card cannot safely be used by the USB and the audio
-// system at the same time. This must be called every now and
-// then to handle switching between the two devices.
-bool _sdToUsb = false;
-void sdCardPoll()
-{
-	if(_sdToUsb) {
-		if(0 == usbIsConnected()) {
-			FileSystem::instance()->resume();
-			_sdToUsb = false;
-		}
-	}
-}
-
-// Called by the USB driver to obtain possession of the SD card.
-// Closes all files and unmounts the card.
-extern "C" void sdCardToUsb()
-{
-	_sdToUsb = true;
-	FileSystem::instance()->suspend();
-}
-
 int main()
 {
-    MPU_Config();       // Configure CPU
-    CPU_CACHE_Enable(); // Set up CPU caching
-    /* STM32F7xx HAL library initialization:
-         - Configure the Flash ART accelerator on ITCM interface
-         - Configure the Systick to generate an interrupt each 1 msec
-         - Set NVIC Group Priority to 4
-         - Low Level Initialization
-       */
-    uwTickFreq = HAL_TICK_FREQ_100HZ;
-    HAL_Init();
-    SystemClock_Config(); // Set a faster core speed (216MHz)
-
-    perfInit();
-
-    // Set up screen and text rendering.
-    Gui::Gui sGui;
-    Gui::Gui *gui = &sGui;
-    printf(">> Disco Board Audio Test <<\n\n");
-
-    // Start up USB Mass storage device to access the SD card.
-    // TODO: There must be a better way to detect USB connection!
-    if(USBD_OK == USB_MSC_Init()) {
-    	printf("USB init OK\n");
-    } else {
-    	printf("USB init failed!\n");
-    }
-
-    // Start up the USB MIDI host.
-    USBMidi *usbMidi = USBMidi::instance();
-
-    FileSystem::instance(); // Mount the file system.
-
 #ifdef ENABLE_AUDIO
 
     // Set up microphone input.
@@ -231,23 +176,6 @@ int main()
     }
 #endif // ENABLE_AUDIO
 
-    // Keyboard
-    const unsigned NOTENUM[] = {
-    	MIDIMessage::C3,
-		MIDIMessage::D3,
-		MIDIMessage::E3,
-		MIDIMessage::F3,
-		MIDIMessage::G3,
-		MIDIMessage::A3,
-		MIDIMessage::B3,
-		MIDIMessage::C4
-    };
-    const char *KEYNAME[] = { "C","D","E","F","G","A","B","C" };
-    for(int i = 0, x = 0; i < 8; i++) {
-    	gui->add(new Gui::Button(Gui::Rect(x, 66, 55, 50), KEYNAME[i], &fnKbPress, &fnKbRelease, NOTENUM[i]));
-    	x += 60;
-    }
-
     // Patch select
     // TODO: Select patches within SF2 file.
     int x = 170;
@@ -283,16 +211,6 @@ int main()
     // Main loop
     while(1)
     {
-    	// Check for touch events and update GUI objects on-screen.
-    	gui->tick();
-
-		// There doesn't seem to be any kind of USB disconnect event
-		// so I have to poll for USB disconnect.
-		sdCardPoll();
-
-		// MIDI USB stuff
-		usbMidi->poll();
-
 		// Do MIDI playback stuff.
 		if(g_mid->isPlaying())
 			g_mid->exec(g_synth, accomp);
