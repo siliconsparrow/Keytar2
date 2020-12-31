@@ -7,7 +7,7 @@
 // **
 // *****************************************************************************
 
-#include "MIDIMessage.h"
+#include "Midi/MIDIMessage.h"
 
 
 MIDIMessage::MIDIMessage()

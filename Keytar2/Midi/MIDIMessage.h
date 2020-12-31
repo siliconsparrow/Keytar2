@@ -7,8 +7,8 @@
 // **
 // *****************************************************************************
 
-#ifndef MIDIMESSAGE_H_
-#define MIDIMESSAGE_H_
+#ifndef MIDI_MIDIMESSAGE_H_
+#define MIDI_MIDIMESSAGE_H_
 
 #include <stdint.h>
 
@@ -152,4 +152,4 @@ private:
 
 #endif // OLD
 
-#endif /* MIDIMESSAGE_H_ */
+#endif /* MIDI_MIDIMESSAGE_H_ */

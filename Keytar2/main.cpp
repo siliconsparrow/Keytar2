@@ -29,7 +29,7 @@
 //       I can adjust them to avoid deadlocks.
 
 //#include "FilterSample.h"
-//#include "Audio.h"
+#include "Audio.h"
 //#include "FilterMixer.h"
 //#include "FilterReverbFir.h"
 //#include "FilterVocoder.h"
@@ -51,12 +51,6 @@
 #include <stdio.h>
 
 #ifdef OLD
-// TEST
-#include "ff_wrapper.h"
-
-// Audio uses a lot of interrupts pretty heavily so if I want
-// to debug something else, it is handy to turn it off temporarily.
-#define ENABLE_AUDIO
 
 // #define WAV_TEST_FILENAME "/Minimal Heaven vol. 1/LS-MH1 Laser Sweep 10.wav"
 #define WAV_TEST_FILENAME "/Large FX Collection/LS LFXC Short-Sound 022.wav"
@@ -154,13 +148,6 @@ int main()
     mixer.setChannelSource(0, &mic, FilterMixer::kMaxLevel / 2);
     mixer.setChannelSource(1, &synth, FilterMixer::kMaxLevel / 2);
 
-    // Init audio streaming.
-    if(Audio::kStatusOk == Audio::instance()->init()) {
-    	Audio::instance()->setFilterChain(&mixer);
-    	printf("Audio init OK\n");
-    } else {
-    	printf("Audio init failed!\n");
-    }
 #endif // ENABLE_AUDIO
 
     // Set up on-screen controls.
@@ -275,15 +262,22 @@ int main()
     // Set up SD card.
     FileSystem *fs = FileSystem::instance();
 
-    // Test the SD card.
-    printf("SD Card file list:\n");
-    fs->readDir((const TCHAR *)"/",	(const TCHAR *)"*", &fnDirResult);
-
     // Set up the MIDI USB Host.
     USBMidi *usbMidi = USBMidi::instance();
 
     // Set up USB Storage to access the SD Card.
     USBStorage *usbStorage = USBStorage::instance();
+
+    // Set up microphone input.
+    FilterLineIn mic(FilterLineIn::chanLeft); // Mono headset mic on line-in left channel.
+
+    // Init audio streaming.
+    if(Audio::kStatusOk == Audio::instance()->init()) {
+    	Audio::instance()->setFilterChain(&mic/*&mixer*/);
+    	printf("Audio init OK\n");
+    } else {
+    	printf("Audio init failed!\n");
+    }
 
     // The main object that runs everything.
     Synth synth;
@@ -291,6 +285,12 @@ int main()
 
     // An on-screen keyboard might be useful.
     gui->add(synth.createKeyboard(Gui::Rect(0, 100, 480, 100)));
+
+    if(Audio::kStatusOk == Audio::instance()->start()) {
+    	printf("Audio streaming started.\n");
+    } else {
+    	printf("Audio streaming failed to start!\n");
+    }
 
     // Main loop
     while(1) {

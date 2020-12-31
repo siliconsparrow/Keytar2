@@ -4,14 +4,10 @@
 extern HCD_HandleTypeDef hhcd;
 extern SD_HandleTypeDef  uSdHandle;
 extern PCD_HandleTypeDef hpcd;
+extern SAI_HandleTypeDef haudio_out_sai; // SAI handler declared in "stm32746g_discovery_audio.c"
+extern SAI_HandleTypeDef haudio_in_sai; // I2S handler declared in "stm32746g_discovery_audio.c"
 
 #ifdef OLD
-
-
-/* SAI handler declared in "stm32746g_discovery_audio.c" file */
-extern SAI_HandleTypeDef haudio_out_sai;
-/* I2S handler declared in "stm32746g_discovery_audio.c" file */
-extern SAI_HandleTypeDef haudio_in_sai;
 
 ///* Private variables ---------------------------------------------------------*/
 //extern DMA_HandleTypeDef   hdma;
@@ -123,7 +119,6 @@ void BSP_SDMMC_DMA_Rx_IRQHandler(void)
 	perfLeave();
 }
 
-#ifdef OLD
 /**
   * @brief This function handles DMA2 Stream 4 interrupt request.
   * @param None
@@ -147,4 +142,3 @@ void AUDIO_IN_SAIx_DMAx_IRQHandler(void)
 	HAL_DMA_IRQHandler(haudio_in_sai.hdmarx);
 	perfLeave();
 }
-#endif // OLD

@@ -8,8 +8,8 @@
 #ifndef USBMIDI_USBMIDI_H_
 #define USBMIDI_USBMIDI_H_
 
+#include "../Midi/MIDIMessage.h"
 #include "usbh_def.h"
-#include "MIDIMessage.h"
 
 #define RX_BUFF_SIZE   64  /* Max Received data 64 bytes */
 

@@ -87,7 +87,7 @@ extern "C" {
 	void     DMA2_Stream1_IRQHandler() { crash(67); }
 	void     DMA2_Stream2_IRQHandler() { crash(68); }
 //	void     DMA2_Stream3_IRQHandler() { crash(69); }
-	void     DMA2_Stream4_IRQHandler() { crash(70); }
+//	void     DMA2_Stream4_IRQHandler() { crash(70); }
 	void     ETH_IRQHandler() { crash(71); }
 	void     ETH_WKUP_IRQHandler() { crash(72); }
 	void     CAN2_TX_IRQHandler() { crash(73); }
@@ -97,7 +97,7 @@ extern "C" {
 //	void     OTG_FS_IRQHandler() { crash(77); }
 	void     DMA2_Stream5_IRQHandler() { crash(78); }
 //	void     DMA2_Stream6_IRQHandler() { crash(79); }
-	void     DMA2_Stream7_IRQHandler() { crash(80); }
+//	void     DMA2_Stream7_IRQHandler() { crash(80); }
 	void     USART6_IRQHandler() { crash(81); }
 	void     I2C3_EV_IRQHandler() { crash(82); }
 	void     I2C3_ER_IRQHandler() { crash(83); }

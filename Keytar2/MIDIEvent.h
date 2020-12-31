@@ -12,8 +12,8 @@
 #define MIDIEVENT_H_
 
 #include "FileSystem.h"
-#include "MIDIMessage.h"
 #include <stdint.h>
+#include "Midi/MIDIMessage.h"
 
 typedef uint32_t MIDITimestamp;
 

@@ -48,11 +48,14 @@ SOURCES = \
 	stm32f7xx_hal_pcd.c \
 	stm32f7xx_hal_pcd_ex.c \
 	stm32f7xx_hal_sd.c \
+	stm32f7xx_hal_sai.c \
 	stm32746g_discovery.c \
 	stm32746g_discovery_sdram.c \
 	stm32746g_discovery_lcd.c \
 	stm32746g_discovery_ts.c \
 	stm32746g_discovery_sd.c \
+	stm32746g_discovery_audio.c \
+	wm8994.c \
 	ft5336.c \
 	tinycpp.cpp \
 	crash.cpp \
@@ -92,16 +95,13 @@ SOURCES = \
 	TextWindow.cpp \
 	MusicKeyboard.cpp \
 	Gui.cpp \
+	Audio.cpp \
 	Synth.cpp \
 	stm32f7xx_it.c \
 	main.cpp
 	
-#	stm32f7xx_hal_sai.c \
-	stm32f7xx_hal_tim.c \
-	wm8994.c \
-	stm32746g_discovery_audio.c \
+#	stm32f7xx_hal_tim.c \
 	Systick.cpp \
-	Audio.cpp \
 	FilterWavStream.cpp \
 	FilterMixer.cpp \
 	FilterFluidSynth.cpp \
@@ -166,7 +166,9 @@ VPATH = . \
 	lfluidsynth/src \
 	USBMidi \
 	USBStorage \
-	GUI
+	GUI \
+	Midi \
+	Audio
 
 
 	
@@ -187,7 +189,9 @@ INCLUDES = -I. \
 	-Ilfluidsynth/src \
 	-IUSBMidi \
 	-IUSBStorage \
-	-IGUI
+	-IGUI \
+	-IMidi \
+	-IAudio
 
 
 # Additional libraries.

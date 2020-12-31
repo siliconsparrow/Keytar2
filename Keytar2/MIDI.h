@@ -11,8 +11,8 @@
 #define MIDI_H_
 
 //#include "UART.h"
-#include "MIDIMessage.h"
 #include "Accompaniment.h"
+#include "Midi/MIDIMessage.h"
 
 // Base class that could send MIDI messages internally or via UART.
 
