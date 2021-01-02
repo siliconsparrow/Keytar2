@@ -42,13 +42,13 @@ USBMidi::USBMidi()
 #endif // OLD
 
     // Init Host Library
-    USBH_Init(&hUSBHost, USBH_UserProcess, 0);
+    USBH_Init(&_hUSBHost, USBH_UserProcess, 0);
 
     // Add Supported Class
-    USBH_RegisterClass(&hUSBHost, USBH_MIDI_CLASS);
+    USBH_RegisterClass(&_hUSBHost, USBH_MIDI_CLASS);
 
     // Start Host Process
-    USBH_Start(&hUSBHost);
+    USBH_Start(&_hUSBHost);
 }
 
 void USBMidi::poll()
@@ -57,7 +57,7 @@ void USBMidi::poll()
 	applicationPoll();
 
     // USB Host Background task.
-    USBH_Process(&hUSBHost);
+    USBH_Process(&_hUSBHost);
 }
 
 void USBMidi::USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id) {
@@ -96,13 +96,13 @@ void USBMidi::applicationPoll()
 	switch(_appState)
 	{
 	case appStateReady:
-		USBH_MIDI_Receive(&hUSBHost, MIDI_RX_Buffer, RX_BUFF_SIZE); // just once at the beginning, start the first reception
+		USBH_MIDI_Receive(&_hUSBHost, _midiRxBuffer, RX_BUFF_SIZE); // just once at the beginning, start the first reception
 		_appState = appStateRunning;
 		printf("Application running.\n");
 		break;
 
 	case appStateDisconnect:
-		USBH_MIDI_Stop(&hUSBHost);
+		USBH_MIDI_Stop(&_hUSBHost);
 		_appState = appStateIdle;
 		printf("Application idle.\n");
 		break;
@@ -111,14 +111,14 @@ void USBMidi::applicationPoll()
 
 void USBMidi::recvdData()
 {
-	unsigned numberOfPackets = USBH_MIDI_GetLastReceivedDataSize(&hUSBHost) / sizeof(uint32_t); //each USB midi package is 4 bytes long
+	unsigned numberOfPackets = USBH_MIDI_GetLastReceivedDataSize(&_hUSBHost) / sizeof(uint32_t); //each USB midi package is 4 bytes long
 
-	const uint32_t *p = (const uint32_t *)MIDI_RX_Buffer;
+	const uint32_t *p = (const uint32_t *)_midiRxBuffer;
 	for(unsigned i = 0; i < numberOfPackets; i++) {
 		processMidiMessage(p[i]);
 	}
 
-	USBH_MIDI_Receive(&hUSBHost, MIDI_RX_Buffer, RX_BUFF_SIZE); // start a new reception
+	USBH_MIDI_Receive(&_hUSBHost, _midiRxBuffer, RX_BUFF_SIZE); // start a new reception
 }
 
 extern "C" void USBH_MIDI_ReceiveCallback(USBH_HandleTypeDef *phost)

@@ -31,9 +31,9 @@ private:
 		appStateDisconnect
 	};
 
-	USBH_HandleTypeDef hUSBHost;
+	USBH_HandleTypeDef _hUSBHost;
 	STATE              _appState;
-	uint8_t MIDI_RX_Buffer[RX_BUFF_SIZE]; // MIDI reception buffer
+	uint8_t _midiRxBuffer[RX_BUFF_SIZE]; // MIDI reception buffer
 
 	static void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id);
 

@@ -57,7 +57,7 @@ extern "C" {
 	void     TIM1_CC_IRQHandler() { crash(37); }
 	void     TIM2_IRQHandler() { crash(38); }
 	void     TIM3_IRQHandler() { crash(39); }
-	void     TIM4_IRQHandler() { crash(40); }
+//	void     TIM4_IRQHandler() { crash(40); }
 	void     I2C1_EV_IRQHandler() { crash(41); }
 	void     I2C1_ER_IRQHandler() { crash(42); }
 	void     I2C2_EV_IRQHandler() { crash(43); }

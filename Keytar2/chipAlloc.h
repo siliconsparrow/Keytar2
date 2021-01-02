@@ -17,9 +17,13 @@ extern "C" {
 #define FRAMEBUFFER_ADDR ((char *)0xC0000000)
 #define FRAMEBUFFER_SIZE 0x7F800
 
-void *allocSRam(int size);
-//void *allocSDRam(int size);
-//void freeSDRam(void *block);
+unsigned getBytesFree();
+
+void SDmallocInit();
+void *SDmalloc(unsigned size);
+void *SDrealloc (void* ptr, unsigned size);
+void SDfree(void *ptr);
+unsigned SDgetBytesFree();
 
 #ifdef __cplusplus
 }

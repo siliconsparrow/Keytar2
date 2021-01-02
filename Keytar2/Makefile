@@ -41,6 +41,7 @@ SOURCES = \
 	stm32f7xx_hal_gpio.c \
 	stm32f7xx_hal_sdram.c \
 	stm32f7xx_hal_i2c.c \
+	stm32f7xx_hal_tim.c \
 	stm32f7xx_hal_dma.c \
 	stm32f7xx_hal_dma2d.c \
 	stm32f7xx_hal_ltdc.c \
@@ -59,15 +60,20 @@ SOURCES = \
 	ft5336.c \
 	tinycpp.cpp \
 	crash.cpp \
+	arm_common_tables.c \
+	arm_cos_f32.c \
+	arm_sin_f32.c \
 	platform.cpp \
 	syscalls.cpp \
 	chipAlloc.c \
+	Systick.cpp \
 	syscall.c \
 	unicode.c \
 	diskio.c \
 	sd_diskio.c \
 	ff_gen_drv.c \
 	ff.c \
+	ff_wrapper.c \
 	FileSystem.cpp \
 	usbd_msc.c \
 	usbd_msc_bot.c \
@@ -88,35 +94,7 @@ SOURCES = \
 	usbh_MIDI.c \
 	USBMidi.cpp \
 	MIDIMessage.cpp \
-	Screen.cpp \
-	Gfx.cpp \
-	Label.cpp \
-	Button.cpp \
-	TextWindow.cpp \
-	MusicKeyboard.cpp \
-	Gui.cpp \
-	Audio.cpp \
-	Synth.cpp \
-	stm32f7xx_it.c \
-	main.cpp
-	
-#	stm32f7xx_hal_tim.c \
-	Systick.cpp \
-	FilterWavStream.cpp \
-	FilterMixer.cpp \
-	FilterFluidSynth.cpp \
-	AudioFormat.cpp \
-	PerfMeter.cpp \
 	MIDI.cpp \
-	MIDIEvent.cpp \
-	MIDITimer.cpp \
-	MIDITrack.cpp \
-	MIDIFile.cpp \
-	PerfMon.c \
-	UTimer.c \
-	arm_sin_f32.c \
-	arm_cos_f32.c \
-	arm_common_tables.c \
 	fluid_settings.c \
 	fluid_synth.c \
 	fluid_list.c \
@@ -130,8 +108,29 @@ SOURCES = \
 	fluid_rev.c \
 	fluid_chorus.c \
 	fluid_gen.c \
-	ff_wrapper.c \
-	stm32f7xx_hal_hcd.c \
+	FilterFluidSynth.cpp \
+	UTimer.c \
+	Screen.cpp \
+	Gfx.cpp \
+	Label.cpp \
+	Button.cpp \
+	TextWindow.cpp \
+	MusicKeyboard.cpp \
+	PerfMeter.cpp \
+	PerfMon.c \
+	Gui.cpp \
+	Audio.cpp \
+	Synth.cpp \
+	stm32f7xx_it.c \
+	main.cpp
+	
+#	FilterWavStream.cpp \
+	FilterMixer.cpp \
+	AudioFormat.cpp \
+	MIDIEvent.cpp \
+	MIDITimer.cpp \
+	MIDITrack.cpp \
+	MIDIFile.cpp \
 
 #	usbh_midi_core.c \
 	usb_hcd.c \
@@ -141,7 +140,6 @@ SOURCES = \
 	usbh_ioreq.c \
 	usbh_hcs.c \
 	usbh_usr.c \
-
 
 #	FilterSample.cpp \
 	FilterVocoder.cpp \

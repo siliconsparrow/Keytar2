@@ -8,15 +8,12 @@
 #ifndef USBMIDI_USBMIDI_H_
 #define USBMIDI_USBMIDI_H_
 
-#include "../Midi/MIDIMessage.h"
+#include "MIDIMessage.h"
 #include "usbh_def.h"
-
-#define RX_BUFF_SIZE   64  /* Max Received data 64 bytes */
 
 class USBMidi
 {
 public:
-
 	class Delegate
 	{
 	public:
@@ -41,10 +38,14 @@ private:
 		appStateDisconnect
 	};
 
+	enum {
+		kRxBufSize = 64
+	};
+
 	Delegate           *_delegate;
-	USBH_HandleTypeDef hUSBHost;
-	STATE              _appState;
-	uint8_t            MIDI_RX_Buffer[RX_BUFF_SIZE]; // MIDI reception buffer
+	USBH_HandleTypeDef  _hUSBHost;
+	STATE               _appState;
+	uint8_t             _midiRxBuffer[kRxBufSize]; // MIDI reception buffer
 
 	static void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id);
 

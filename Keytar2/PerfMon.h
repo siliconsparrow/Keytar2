@@ -23,7 +23,7 @@ enum ProcessId {
 	nPids
 };
 
-//#define USE_PERFMON
+#define USE_PERFMON
 
 #ifdef USE_PERFMON
 

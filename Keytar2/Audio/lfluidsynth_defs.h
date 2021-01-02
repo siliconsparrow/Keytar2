@@ -30,11 +30,18 @@
 #define	FLUID_LOG(...) fluid_log( __VA_ARGS__)
 
 
-#define FLUID_MALLOC(_n)             malloc(_n)
-#define FLUID_REALLOC(_p,_n)         realloc(_p,_n)
-#define FLUID_NEW(_t)                (_t*)malloc(sizeof(_t))
-#define FLUID_ARRAY(_t,_n)           (_t*)malloc((_n)*sizeof(_t))
-#define FLUID_FREE(_p)               free(_p)
+//#define FLUID_MALLOC(_n)             malloc(_n)
+//#define FLUID_REALLOC(_p,_n)         realloc(_p,_n)
+//#define FLUID_NEW(_t)                (_t*)malloc(sizeof(_t))
+//#define FLUID_ARRAY(_t,_n)           (_t*)malloc((_n)*sizeof(_t))
+//#define FLUID_FREE(_p)               free(_p)
+
+#include "chipAlloc.h"
+#define FLUID_MALLOC(_n)             SDmalloc(_n)
+#define FLUID_REALLOC(_p,_n)         SDrealloc(_p,_n)
+#define FLUID_NEW(_t)                (_t*)SDmalloc(sizeof(_t))
+#define FLUID_ARRAY(_t,_n)           (_t*)SDmalloc((_n)*sizeof(_t))
+#define FLUID_FREE(_p)               SDfree(_p)
 
 #ifdef QSPI_SOUNDFONT_ROM
 typedef QSPI_FILE* fluid_file;

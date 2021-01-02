@@ -6,12 +6,13 @@
  */
 
 #include "PerfMeter.h"
+#include "chipAlloc.h"
 #include <stdio.h>
 
 PerfMeter::PerfMeter(Gui::Gui *gui, int x, int y)
 {
-    for(int i = 0; i < nPids; i++) {
-    	_lblPerf[i] = new Gui::Label(Gui::Rect(x, y + (i * kLineHeight), kWidth, kLineHeight), perfPidName[i]);
+    for(int i = 0; i < nPids + 2; i++) {
+    	_lblPerf[i] = new Gui::Label(Gui::Rect(x, y + (i * kLineHeight), kWidth, kLineHeight), i < nPids ? perfPidName[i] : "");
     	_cache[i] = 256;
     	gui->add(_lblPerf[i]);
     }
@@ -37,4 +38,9 @@ void PerfMeter::evtTick()
 			_cache[i] = p;
 		}
 	}
+
+	sprintf(buf, "SRAM:%4uk", getBytesFree() / 1024);
+	_lblPerf[nPids]->setText(buf);
+	sprintf(buf, "DRAM:%4uk", SDgetBytesFree() / 1024);
+	_lblPerf[nPids + 1]->setText(buf);
 }

@@ -9,6 +9,7 @@
 #define PERFMETER_H_
 
 #include "Gui.h"
+#include "Label.h"
 #include "PerfMon.h"
 #include "Systick.h"
 
@@ -27,7 +28,7 @@ protected:
 	virtual void evtTick();
 
 private:
-    Gui::Label *_lblPerf[nPids];
+    Gui::Label *_lblPerf[nPids + 2];
     unsigned    _cache[nPids];
 };
 

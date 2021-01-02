@@ -34,20 +34,19 @@
 //#include "FilterReverbFir.h"
 //#include "FilterVocoder.h"
 //#include "FilterWavStream.h"
-//#include "FilterFluidSynth.h"
-//#include "PerfMeter.h"
-//#include "UTimer.h"
 //#include "MIDIFile.h"
 #include "stm32746g_discovery_sdram.h"
 #include "Gui.h"
 #include "platform.h"
 #include "PerfMon.h"
+#include "PerfMeter.h"
 #include "MusicKeyboard.h"
 #include "USBMidi.h"
 #include "USBStorage.h"
 #include "FileSystem.h"
 #include "Synth.h"
 #include "main.h"
+#include "chipAlloc.h"
 #include <stdio.h>
 
 #ifdef OLD
@@ -139,6 +138,7 @@ int main()
     FilterLineIn mic(FilterLineIn::chanLeft);
 
     // Set up fluid synth.
+    //#include "UTimer.h"
     uTimerInit();
     FilterFluidSynth synth;
     g_synth = &synth;
@@ -154,14 +154,6 @@ int main()
     //Gui::Button btnWav(Gui::Rect(10, 10, 146, 30), "PLAY WAV", &fnPlayWav);
     PerfMeter perf(gui, 480 - PerfMeter::kWidth, 0);
     //gui->add(&btnWav);
-
-#ifdef ENABLE_AUDIO
-    if(Audio::kStatusOk == Audio::instance()->start()) {
-    	printf("Audio streaming started.\n");
-    } else {
-    	printf("Audio streaming failed to start!\n");
-    }
-#endif // ENABLE_AUDIO
 
     // Patch select
     // TODO: Select patches within SF2 file.
@@ -187,8 +179,6 @@ int main()
 
     // Create button to start/stop drum pattern.
     gui->add(new Gui::Button(Gui::Rect(10, 10, 146, 30), "START", 0, &fnDrumStartStop));
-
-    uint32_t _tLastPerfUpdate = 0;
 
     Gui::Label beatDisplay(Gui::Rect(170, 40, 100, 25), "BEAT");
     gui->add(&beatDisplay);
@@ -227,11 +217,6 @@ int main()
 }
 #endif // OLD
 
-void fnDirResult(FileSystem::DirEntry &entry)
-{
-	printf(" %s\n", entry.getName());
-}
-
 int main()
 {
 	// Set up CPU core.
@@ -243,14 +228,15 @@ int main()
     //  - Systick to generate an interrupt each 1 msec
     //  - Set NVIC Group Priority to 4
     //   - Low Level Initialization
-    uwTickFreq = HAL_TICK_FREQ_1KHZ;
+    uwTickFreq = HAL_TICK_FREQ_100HZ;
     HAL_Init();
 
     // Set a faster core speed (216MHz)
     SystemClock_Config();
 
-    // Activate the SDRAM so malloc() and new() will work.
+    // Activate the SDRAM.
     BSP_SDRAM_Init();
+    SDmallocInit();
 
     // Set up process monitor.
     perfInit();
@@ -268,23 +254,32 @@ int main()
     // Set up USB Storage to access the SD Card.
     USBStorage *usbStorage = USBStorage::instance();
 
+    // The main object that runs everything.
+    Synth *synth = new Synth();
+    usbMidi->setDelegate(synth);
+
     // Set up microphone input.
-    FilterLineIn mic(FilterLineIn::chanLeft); // Mono headset mic on line-in left channel.
+    //FilterLineIn mic(FilterLineIn::chanLeft); // Mono headset mic on line-in left channel.
+
+    // Final mixdown before the sound is output.
+    //FilterMixer mixer(2);
+    //mixer.setChannelSource(0, &mic, FilterMixer::kMaxLevel / 2);
+    //mixer.setChannelSource(1, &synth, FilterMixer::kMaxLevel / 2);
+	//Audio::instance()->setFilterChain(&mic/*&mixer*/);
 
     // Init audio streaming.
     if(Audio::kStatusOk == Audio::instance()->init()) {
-    	Audio::instance()->setFilterChain(&mic/*&mixer*/);
+    	Audio::instance()->setFilterChain(synth->getFilter());
     	printf("Audio init OK\n");
     } else {
     	printf("Audio init failed!\n");
     }
 
-    // The main object that runs everything.
-    Synth synth;
-    usbMidi->setDelegate(&synth);
-
     // An on-screen keyboard might be useful.
-    gui->add(synth.createKeyboard(Gui::Rect(0, 100, 480, 100)));
+    gui->add(synth->createKeyboard(Gui::Rect(0, 100, 480, 100)));
+
+    // Set up CPU and memory stats.
+    PerfMeter perf(gui, 480 - PerfMeter::kWidth, 0);
 
     if(Audio::kStatusOk == Audio::instance()->start()) {
     	printf("Audio streaming started.\n");

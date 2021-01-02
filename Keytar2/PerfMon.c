@@ -30,7 +30,8 @@
 		"Idle",
 		"Audio",
 		"GUI",
-		"USB",
+		"USBH",
+		"USBD",
 		"Disk"
 	};
 
