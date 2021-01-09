@@ -11,6 +11,7 @@
 #include "USBMidi.h"
 #include "MusicKeyboard.h"
 #include "FilterFluidSynth.h"
+#include "Gui.h"
 
 class Synth
 	: public USBMidi::Delegate
@@ -19,7 +20,7 @@ public:
 	Synth();
 	virtual ~Synth();
 
-	Gui::MusicKeyboard *createKeyboard(Gui::Rect r);
+	void createControls(Gui::Gui *gui);
 
 	AudioFilter *getFilter() { return _synth; }
 
@@ -34,6 +35,7 @@ private:
 
 	static void kbNoteOn(uint8_t noteNum);
 	static void kbNoteOff(uint8_t noteNum);
+	static void fnPgmButton(unsigned tag);
 };
 
 #endif // SYNTH_H_

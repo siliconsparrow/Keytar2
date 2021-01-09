@@ -186,7 +186,7 @@ void *SDmalloc(unsigned size)
 	}
 #else
 	// Small blocks are allocated using malloc(). It's more efficient than my algorithm but it does consume SRAM.
-	if(size < 512) {
+	if(size < 1024) {
 		return malloc(size);
 	} else {
 		addr = SDBLOCK0;

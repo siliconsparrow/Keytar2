@@ -7,6 +7,7 @@
 
 #include "Synth.h"
 #include "UTimer.h"
+#include "Button.h"
 #include <stdio.h>
 
 static Synth *g_synth = 0;
@@ -26,10 +27,29 @@ Synth::~Synth()
 	g_synth = 0;
 }
 
-Gui::MusicKeyboard *Synth::createKeyboard(Gui::Rect r)
+void Synth::createControls(Gui::Gui *gui)
 {
-	_keyboard = new Gui::MusicKeyboard(r, &Synth::kbNoteOn, &Synth::kbNoteOff);
-	return _keyboard;
+    // An on-screen keyboard might be useful.
+	_keyboard = new Gui::MusicKeyboard(Gui::Rect(0, 100, 480, 100), &Synth::kbNoteOn, &Synth::kbNoteOff);
+	gui->add(_keyboard);
+
+    // Patch select
+    // TODO: Select patches within SF2 file.
+    int x = 170;
+    const char *NUM[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0" };
+    for(int i = 0; i < 8; i++) {
+    	char buf[2];
+    	buf[0] = '1' + i;
+    	buf[1] = 0;
+    	gui->add(new Gui::Button(Gui::Rect(x, 10, 25, 30), NUM[i], 0, &fnPgmButton, i));
+    	x += 28;
+    }
+
+}
+
+void Synth::fnPgmButton(unsigned tag)
+{
+	g_synth->_synth->setProgram(MIDIMessage::CHANNEL1, tag);
 }
 
 void Synth::midiMessage(MIDIMessage msg)
@@ -40,13 +60,11 @@ void Synth::midiMessage(MIDIMessage msg)
 // Called when the on-screen keyboard is pressed.
 void Synth::kbNoteOn(uint8_t noteNum)
 {
-	if(g_synth != 0)
-		g_synth->midiMessage(MIDIMessage(MIDIMessage::NOTE_ON, MIDIMessage::CHANNEL1, noteNum, 127));
+	g_synth->midiMessage(MIDIMessage(MIDIMessage::NOTE_ON, MIDIMessage::CHANNEL1, noteNum, 127));
 }
 void Synth::kbNoteOff(uint8_t noteNum)
 {
-	if(g_synth != 0)
-		g_synth->midiMessage(MIDIMessage(MIDIMessage::NOTE_OFF, MIDIMessage::CHANNEL1, noteNum));
+	g_synth->midiMessage(MIDIMessage(MIDIMessage::NOTE_OFF, MIDIMessage::CHANNEL1, noteNum));
 }
 
 void Synth::usbMidiEvent(MIDIMessage msg)

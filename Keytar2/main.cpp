@@ -49,6 +49,8 @@
 #include "chipAlloc.h"
 #include <stdio.h>
 
+
+
 #ifdef OLD
 
 // #define WAV_TEST_FILENAME "/Minimal Heaven vol. 1/LS-MH1 Laser Sweep 10.wav"
@@ -121,14 +123,6 @@ void fnDrumStartStop(unsigned tag)
 //	0
 //};
 
-void fnPatch(unsigned tag)
-{
-	//static unsigned drumpatch[] = { 0, 16, 24, 25, 32, 40, 48, 64 };
-	//g_synth->setProgram(MIDIMessage::CHANNEL10, drumpatch[tag]);
-	g_synth->setProgram(MIDIMessage::CHANNEL1, tag);
-	//g_synth->replaceSF(PATCHFILE[tag]);
-}
-
 
 int main()
 {
@@ -150,22 +144,6 @@ int main()
 
 #endif // ENABLE_AUDIO
 
-    // Set up on-screen controls.
-    //Gui::Button btnWav(Gui::Rect(10, 10, 146, 30), "PLAY WAV", &fnPlayWav);
-    PerfMeter perf(gui, 480 - PerfMeter::kWidth, 0);
-    //gui->add(&btnWav);
-
-    // Patch select
-    // TODO: Select patches within SF2 file.
-    int x = 170;
-    const char *NUM[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0" };
-    for(int i = 0; i < 8; i++) {
-    	char buf[2];
-    	buf[0] = '1' + i;
-    	buf[1] = 0;
-    	gui->add(new Gui::Button(Gui::Rect(x, 10, 25, 30), NUM[i], 0, &fnPatch, i));
-    	x += 28;
-    }
 
     // TEST: Load a MIDI file.
     MIDIFile midiFile;
@@ -258,6 +236,9 @@ int main()
     Synth *synth = new Synth();
     usbMidi->setDelegate(synth);
 
+    // Create controls.
+    synth->createControls(gui);
+
     // Set up microphone input.
     //FilterLineIn mic(FilterLineIn::chanLeft); // Mono headset mic on line-in left channel.
 
@@ -274,9 +255,6 @@ int main()
     } else {
     	printf("Audio init failed!\n");
     }
-
-    // An on-screen keyboard might be useful.
-    gui->add(synth->createKeyboard(Gui::Rect(0, 100, 480, 100)));
 
     // Set up CPU and memory stats.
     PerfMeter perf(gui, 480 - PerfMeter::kWidth, 0);
