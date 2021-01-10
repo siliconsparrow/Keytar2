@@ -106,7 +106,17 @@ void MIDITimer::timerInit()
 	MIDITIMER_DBG_FREEZE();
 
 	// Compute the prescaler value
-	uint32_t uwPrescalerValue = (uint32_t) ((SystemCoreClock / 2) / MIDITIMER_FREQ) - 1;
+	RCC_ClkInitTypeDef    clkconfig;
+	uint32_t              pFLatency;
+	HAL_RCC_GetClockConfig(&clkconfig, &pFLatency);
+	uint32_t timClk;
+	if(clkconfig.APB1CLKDivider == RCC_HCLK_DIV1)
+		timClk = HAL_RCC_GetPCLK1Freq();
+	  else
+		  timClk = 2*HAL_RCC_GetPCLK1Freq();
+
+	// TODO: I shouldn't have to put that 4 there. I dont' get why it is neccessary!!
+	uint32_t uwPrescalerValue = (timClk / 4 / MIDITIMER_FREQ) - 1;//(uint32_t) ((SystemCoreClock / 4) / MIDITIMER_FREQ) - 1;
 
 	// Set TIMx instance
 	hMidiTimer.Instance = MIDITIMER_DEVICE;

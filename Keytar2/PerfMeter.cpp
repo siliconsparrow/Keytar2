@@ -11,7 +11,7 @@
 
 PerfMeter::PerfMeter(Gui::Gui *gui, int x, int y)
 {
-    for(int i = 0; i < nPids + 2; i++) {
+    for(int i = 0; i < kCacheSize; i++) {
     	_lblPerf[i] = new Gui::Label(Gui::Rect(x, y + (i * kLineHeight), kWidth, kLineHeight), i < nPids ? perfPidName[i] : "");
     	_cache[i] = 256;
     	gui->add(_lblPerf[i]);

@@ -23,6 +23,8 @@ namespace Gui
 		virtual void onRelease();
 		virtual void draw(Gfx &gfx);
 
+		void setText(const char *newText);
+
 	private:
 		const char  *_label;
 		void       (*_onClick)(unsigned);

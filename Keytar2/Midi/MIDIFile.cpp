@@ -51,11 +51,16 @@ MIDIFile::~MIDIFile()
 
 bool MIDIFile::load(const TCHAR *filename)
 {
+	// Clear out any old data.
+	clear();
+
+	// Open the file.
 	FileSystem::File f;
 	if(!f.open(filename)) {
 		return false;
 	}
 
+	// Read the file header.
 	MIDFileHeader hdr;
 	
 	// Read the MID header.
@@ -74,32 +79,35 @@ bool MIDIFile::load(const TCHAR *filename)
 	_ticksPerCrotchet = ntohs(hdr.ticksPerCrotchet);
 
 	// Read each track
-	_numTracks = ntohs(hdr.numTracks);
-	_track = new MIDITrack[_numTracks];
+	int numTracksInFile = ntohs(hdr.numTracks);
+	_track = new MIDITrack[numTracksInFile];
 
-	_songLength = 0;
-	for(int idxTrack = 0; idxTrack < _numTracks; idxTrack++)
+	//_songLength = 0;
+	for(int idxTrack = 0; idxTrack < numTracksInFile; idxTrack++)
 	{
-		MIDITrack &currentTrack = _track[idxTrack];
+		MIDITrack &currentTrack = _track[_numTracks];
 
-		while(1)
+		if(!currentTrack.load(f, *this))
 		{
-			if(!currentTrack.load(f, *this))
-				return false;
-
-			// Does the track contain any notes? If so, we are good to continute.
-			if(!currentTrack.isEmpty())
-				break;
-
-			// Track was blank or just contained metadata which is useless for replay
-			// purposes. So ignore it and don't count it towards the total tracks.
-			_numTracks--;
+			clear();
+			return false;
 		}
 
+		// Does the track contain any notes?
+		if(currentTrack.isEmpty())
+		{
+			// Track was blank or just contained metadata which is useless for replay
+			// purposes. So ignore it and don't count it towards the total tracks.
+			currentTrack = MIDITrack(); // Clear useless data.
+			continue;
+		}
+
+		// Successfully loaded a track.
+		_numTracks++;
+
 		// Set the song length to that of the longest track.
-		unsigned trackLength = _track[idxTrack].getTotalLength();
-		if(trackLength > _songLength)
-			_songLength = trackLength;
+		if(currentTrack.getTotalLength() > _songLength)
+			_songLength = currentTrack.getTotalLength();
 	}
 
 	_timer.setLoopPoint(_songLength);
@@ -133,6 +141,7 @@ void MIDIFile::clear()
 	delete[] _track;
 	_track = 0;
 	_numTracks = 0;
+	_songLength = 0;
 }
 
 // Calculate how many ticks per bar.
@@ -145,6 +154,8 @@ unsigned MIDIFile::getTicksPerBar() const
 void MIDIFile::rewind()
 {
 	_timer.resetTime();
+	_timer.setTempo(_tempo);
+	_timer.setTimeSignature(_timesigNum, _timesigDenom);
 	for(unsigned i = 0; i < _numTracks; i++)
 		_track[i].rewind();
 }
@@ -177,6 +188,9 @@ void MIDIFile::start(MIDISink *midiOut, unsigned timestamp)
 // TODO: Really needs to be interrupt-driven but polled is OK for now.
 bool MIDIFile::exec(MIDISink *midiOut, AccompState &accomp)
 {
+	if(!isPlaying())
+		return true;
+
 	unsigned tNow = _timer.getCurrentTime();
 	if(_lastTick == tNow)
 		return false;
@@ -184,9 +198,7 @@ bool MIDIFile::exec(MIDISink *midiOut, AccompState &accomp)
 	_lastTick = tNow;
 
 	for(unsigned i = 0; i < _numTracks; i++)
-	{
 		_track[i].exec(midiOut, accomp, tNow);
-	}
 
 #ifdef OLD
 	if(_timer.hasLooped())

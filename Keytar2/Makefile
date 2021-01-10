@@ -120,6 +120,11 @@ SOURCES = \
 	PerfMon.c \
 	Gui.cpp \
 	Audio.cpp \
+	MIDITimer.cpp \
+	MIDIEvent.cpp \
+	MIDITrack.cpp \
+	MIDIFile.cpp \
+	Accompaniment.cpp \
 	Synth.cpp \
 	stm32f7xx_it.c \
 	main.cpp
@@ -127,10 +132,6 @@ SOURCES = \
 #	FilterWavStream.cpp \
 	FilterMixer.cpp \
 	AudioFormat.cpp \
-	MIDIEvent.cpp \
-	MIDITimer.cpp \
-	MIDITrack.cpp \
-	MIDIFile.cpp \
 
 #	usbh_midi_core.c \
 	usb_hcd.c \

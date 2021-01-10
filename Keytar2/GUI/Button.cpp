@@ -53,4 +53,10 @@ namespace Gui
 		gfx.drawText(5, 5, _label);
 	}
 
+	void Button::setText(const char *newText)
+	{
+		_label = newText;
+		dirty();
+	}
+
 } // namespace Gui

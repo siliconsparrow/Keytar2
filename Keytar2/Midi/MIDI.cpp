@@ -10,6 +10,68 @@
 #include "MIDI.h"
 #include "GeneralMIDI.h"
 
+
+#define NOACCOMP 0x10000
+
+AccompState::AccompState()
+//	: _transpose(NOACCOMP)
+//	, _minor(false)
+//	, _channelMask(DEFAULT_ACCOMP_CHANNEL_MASK)
+{
+}
+
+#ifdef OLD
+void AccompState::stopAccomp()
+{
+	_transpose = NOACCOMP;
+}
+
+void AccompState::setTranspose(int transpose, bool minor)
+{
+	_transpose = transpose;
+	_minor = minor;
+}
+
+void AccompState::setChannelMask(uint16_t mask)
+{
+	_channelMask = mask;
+}
+
+// Return false if the message is not to be played.
+bool AccompState::filterMessage(uint8_t *result, MIDIMessage &msg)
+{
+	if(msg.msgType() == MIDIMessage::NOTE_ON || msg.msgType() == MIDIMessage::NOTE_OFF)
+	{
+		if(0 != (_channelMask & (1 << msg.getChannel())))
+		{
+			if(_transpose == NOACCOMP)
+				return false; // Do not play accompaniment notes when no scale has been selected.
+
+			// Make a transposed copy of the MIDI message.
+			msg.dataTransposed(result, _transpose, _minor);
+			return true;
+		}
+	}
+
+	// Non-note messages and non-accomp channel messages do not get transposed.
+	// Just make a straight-up copy of those messages.
+	msg.dataCopy(result);
+	return true;
+
+/*
+	if(msg.msgType() == MIDIMessage::NOTE_ON)
+	{
+		if(msg.getChannel() != DRUMTRACK_CHANNEL && _transpose == NOACCOMP)
+			return false; // Do not play accompaniment notes when no scale has been selected.
+	}
+
+	msg.dataTransposed(result, _transpose, _minor);
+	return true;
+*/
+}
+#endif // OLD
+
+
 #ifdef OLD
 
 #define MIDI_BIT_RATE 31250

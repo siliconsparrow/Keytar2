@@ -28,8 +28,11 @@ protected:
 	virtual void evtTick();
 
 private:
-    Gui::Label *_lblPerf[nPids + 2];
-    unsigned    _cache[nPids];
+	enum {
+		kCacheSize = nPids + 2
+	};
+    Gui::Label *_lblPerf[kCacheSize];
+    unsigned    _cache[kCacheSize];
 };
 
 #endif /* PERFMETER_H_ */

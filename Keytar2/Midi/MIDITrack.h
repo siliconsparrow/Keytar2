@@ -13,7 +13,7 @@
 //#include "MIDITimer.h"
 #include "MIDIEvent.h"
 #include "FileSystem.h"
-#include "Accompaniment.h"
+#include "MIDI.h"
 //#include "MIDIMessageArray.h"
 
 // ARM byte swap functions.

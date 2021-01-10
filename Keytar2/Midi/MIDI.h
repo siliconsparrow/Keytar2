@@ -11,8 +11,36 @@
 #define MIDI_H_
 
 //#include "UART.h"
-#include "Accompaniment.h"
+//#include "Accompaniment.h"
 #include "Midi/MIDIMessage.h"
+
+// Class to handle transposition to different keys during MIDI playback.
+#ifdef OLD
+#include "MIDIMessage.h"
+#include <stdint.h>
+
+#define DEFAULT_ACCOMP_CHANNEL_MASK ((uint16_t)0xFBFE) // Default accompaniment channels are all except for 10 (drums) and 1 (keyboard).
+#endif // OLD
+
+class AccompState
+{
+public:
+	AccompState();
+
+#ifdef OLD
+	void stopAccomp();
+	void setChannelMask(uint16_t mask);
+	void setTranspose(int transpose, bool minor);
+
+	bool filterMessage(uint8_t *result, MIDIMessage &msg);
+
+private:
+	int      _transpose;
+	bool     _minor;
+	uint16_t _channelMask;
+#endif // OLD
+};
+
 
 // Base class that could send MIDI messages internally or via UART.
 

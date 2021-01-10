@@ -14,10 +14,13 @@ static Synth *g_synth = 0;
 
 Synth::Synth()
 	: _keyboard(0)
+	, _btnStartStop(0)
 {
     uTimerInit();
     _synth = new FilterFluidSynth();
     g_synth = this;
+
+    _accomp.load("Psycho2.MID"); // "drumtest1.mid"); // "testMidi.mid");
 
     _synth->setProgram(MIDIMessage::CHANNEL1, 1);
 }
@@ -33,8 +36,7 @@ void Synth::createControls(Gui::Gui *gui)
 	_keyboard = new Gui::MusicKeyboard(Gui::Rect(0, 100, 480, 100), &Synth::kbNoteOn, &Synth::kbNoteOff);
 	gui->add(_keyboard);
 
-    // Patch select
-    // TODO: Select patches within SF2 file.
+    // Select patches within SF2 file.
     int x = 170;
     const char *NUM[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0" };
     for(int i = 0; i < 8; i++) {
@@ -45,11 +47,35 @@ void Synth::createControls(Gui::Gui *gui)
     	x += 28;
     }
 
+    // Start/stop button
+    _btnStartStop = new Gui::Button(Gui::Rect(10, 10, 100, 34), "START", 0, &fnStartStop);
+    gui->add(_btnStartStop);
 }
 
 void Synth::fnPgmButton(unsigned tag)
 {
 	g_synth->_synth->setProgram(MIDIMessage::CHANNEL1, tag);
+}
+
+void Synth::fnStartStop(unsigned tag)
+{
+	g_synth->startStop();
+}
+
+void Synth::startStop()
+{
+	if(_accomp.isPlaying()) {
+		_accomp.stop(_synth);
+		_btnStartStop->setText("START");
+	} else {
+		_accomp.start(_synth);
+		_btnStartStop->setText("STOP");
+	}
+}
+
+void Synth::poll()
+{
+	_accomp.poll(_synth);
 }
 
 void Synth::midiMessage(MIDIMessage msg)

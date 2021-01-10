@@ -274,5 +274,8 @@ int main()
 
     	// Check for touch events and update GUI objects on-screen.
     	gui->tick();
+
+    	// Playback stuff.
+    	synth->poll();
     }
 }
