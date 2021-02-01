@@ -33,8 +33,8 @@ Synth::~Synth()
 void Synth::createControls(Gui::Gui *gui)
 {
     // An on-screen keyboard might be useful.
-	_keyboard = new Gui::MusicKeyboard(Gui::Rect(0, 100, 480, 100), &Synth::kbNoteOn, &Synth::kbNoteOff);
-	gui->add(_keyboard);
+	//_keyboard = new Gui::MusicKeyboard(Gui::Rect(0, 100, 480, 100), &Synth::kbNoteOn, &Synth::kbNoteOff);
+	//gui->add(_keyboard);
 
     // Select patches within SF2 file.
     int x = 170;
@@ -54,7 +54,7 @@ void Synth::createControls(Gui::Gui *gui)
 
 void Synth::fnPgmButton(unsigned tag)
 {
-	g_synth->_synth->setProgram(MIDIMessage::CHANNEL1, tag);
+	g_synth->_synth->setProgram(MIDIMessage::CHANNEL2, tag);
 }
 
 void Synth::fnStartStop(unsigned tag)

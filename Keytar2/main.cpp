@@ -203,7 +203,7 @@ int main()
 
     // Set up HAL library:
     //  - Flash ART accelerator on ITCM interface
-    //  - Systick to generate an interrupt each 1 msec
+    //  - Systick to generate an interrupt each 10 msec
     //  - Set NVIC Group Priority to 4
     //   - Low Level Initialization
     uwTickFreq = HAL_TICK_FREQ_100HZ;

@@ -104,20 +104,3 @@ void FilterFluidSynth::send(const MIDIMessage &msg)
 		break;
 	}
 }
-
-#ifdef DEPRECATED
-// TODO: All the following could be replaced with a single MIDIMessage handler.
-
-void FilterFluidSynth::noteOn(unsigned noteNum, unsigned velocity)
-{
-	int midiChannel = 0;
-	fluid_synth_noteon(_synth, midiChannel, noteNum, velocity);
-}
-
-void FilterFluidSynth::noteOff(unsigned noteNum)
-{
-	int midiChannel = 0;
-	fluid_synth_noteoff(_synth, midiChannel, noteNum);
-}
-
-#endif // DEPRECATED

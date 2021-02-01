@@ -47,6 +47,7 @@
 #include "stm32f7xx_hal.h"
 #include "usbh_core.h"
 #include "stm32746g_discovery.h"
+#include "platform.h"
 
 HCD_HandleTypeDef hhcd;
 
@@ -85,7 +86,7 @@ void HAL_HCD_MspInit(HCD_HandleTypeDef *hhcd)
     __HAL_RCC_USB_OTG_FS_CLK_ENABLE();
     
     /* Set USBFS Interrupt to the lowest priority */
-    HAL_NVIC_SetPriority(OTG_FS_IRQn, 6, 0);
+    HAL_NVIC_SetPriority(OTG_FS_IRQn, INT_PRI_USBFS, 0);
     
     /* Enable USBFS Interrupt */
     HAL_NVIC_EnableIRQ(OTG_FS_IRQn);
@@ -148,7 +149,7 @@ void HAL_HCD_MspInit(HCD_HandleTypeDef *hhcd)
     __HAL_RCC_USB_OTG_HS_CLK_ENABLE();
     
     /* Set USBHS Interrupt to the lowest priority */
-    HAL_NVIC_SetPriority(OTG_HS_IRQn, 6, 0);
+    HAL_NVIC_SetPriority(OTG_HS_IRQn, INT_PRI_USBHS, 0);
     
     /* Enable USBHS Interrupt */
     HAL_NVIC_EnableIRQ(OTG_HS_IRQn);

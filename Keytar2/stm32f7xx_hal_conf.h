@@ -34,6 +34,14 @@
 #define USE_USBH_HS
 #define USE_USBD_FS
 
+// Interrupt priorities
+#define INT_PRI_AUDIO_IN   2 // Audio streaming
+#define INT_PRI_AUDIO_OUT  2
+#define INT_PRI_USBFS 6 // USB
+#define INT_PRI_USBHS 6
+#define MIDITIMER_IRQ_PRIORITY 3 // MIDI playback
+
+
 /* ########################## Module Selection ############################## */
 /**
   * @brief This is the list of modules to be used in the HAL driver 

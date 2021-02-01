@@ -133,6 +133,7 @@ void MIDITimer::timerInit()
 
 	// Set up timer overflow interrupt (occurs evert 65536us).
 	MIDITIMER_DEVICE->DIER |= TIM_DIER_UIE;
+	HAL_NVIC_SetPriority(MIDITIMER_IRQN, MIDITIMER_IRQ_PRIORITY, 0);
 	NVIC_EnableIRQ(MIDITIMER_IRQN);
 
 	// Start the timer.

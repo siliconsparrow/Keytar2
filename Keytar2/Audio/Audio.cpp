@@ -197,7 +197,13 @@ int Audio::initCodec(uint16_t InputDevice, uint16_t OutputDevice, uint32_t Audio
 
       audio_drv->SetVolume(AUDIO_I2C_ADDRESS, volume); // Volume ranges from 0 to 100.
     }
-  return ret;
+
+    // Raise the priority of the audio interrupts (the default driver sets them quite low).
+    HAL_NVIC_SetPriority(AUDIO_IN_SAIx_DMAx_IRQ, INT_PRI_AUDIO_IN, 0);
+    HAL_NVIC_SetPriority(AUDIO_IN_INT_IRQ, INT_PRI_AUDIO_IN, 0);
+    HAL_NVIC_SetPriority(AUDIO_OUT_SAIx_DMAx_IRQ, INT_PRI_AUDIO_OUT, 0);
+
+    return ret;
 }
 
 

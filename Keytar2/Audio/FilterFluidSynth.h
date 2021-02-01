@@ -31,11 +31,6 @@ public:
 	// MIDISink implementation.
 	virtual void send(const MIDIMessage &msg);
 
-	// Some other junk which can probably go.
-	//void noteOn(unsigned noteNum, unsigned velocity);
-	//void noteOff(unsigned noteNum);
-	//void cc(unsigned channel, unsigned value);
-
 private:
 	fluid_synth_t *_synth;
 	int _sfId;
